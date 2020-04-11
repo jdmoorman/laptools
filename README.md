@@ -1,7 +1,6 @@
 # clapsolver
 
 [![Build Status](https://github.com/jdmoorman/clapsolver/workflows/Build%20Master/badge.svg)](https://github.com/jdmoorman/clapsolver/actions)
-[![Documentation](https://readthedocs.org/projects/clapsolver/badge/?version=latest)](https://clapsolver.readthedocs.io/en/latest/?badge=latest)
 [![Code Coverage](https://codecov.io/gh/jdmoorman/clapsolver/branch/master/graph/badge.svg)](https://codecov.io/gh/jdmoorman/clapsolver)
 
 Fast constrained linear assignment problem (CLAP) solvers for Python
@@ -24,10 +23,6 @@ Fast constrained linear assignment problem (CLAP) solvers for Python
 ## Installation
 **Stable Release:** `pip install clapsolver`<br>
 **Development Head:** `pip install git+https://github.com/jdmoorman/clapsolver.git`
-
-## Documentation
-TODO: readthedocs
-For full package documentation please visit [jdmoorman.github.io/clapsolver](https://jdmoorman.github.io/clapsolver).
 
 ## Development
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the code.
