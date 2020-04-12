@@ -20,7 +20,14 @@ jobs:
     - name: Build Package
       run: |
         python setup.py sdist bdist_wheel
+    - name: "List result"
+      run: |
+        ls -l dist
+    - name: "Check long_description"
+      run: |
+        python -m twine check dist/*
     - name: Publish distribution 📦 to Test PyPI
+      if: startsWith(github.event.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.test_pypi_password }}
