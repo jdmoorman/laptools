@@ -1,7 +1,7 @@
-name: Publish if Tagged
+name: Publish
 
 on:
-  push:
+  release:
     branches:
       - master
 
@@ -28,13 +28,11 @@ jobs:
         python -m pip install --upgrade twine
         python -m twine check dist/*
     - name: Publish distribution 📦 to Test PyPI
-      if: startsWith(github.event.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.test_pypi_password }}
         repository_url: https://test.pypi.org/legacy/
     - name: Publish distribution 📦 to PyPI
-      if: startsWith(github.event.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.pypi_password }}
