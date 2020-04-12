@@ -12,10 +12,10 @@ Fast constrained linear assignment problem (CLAP) solvers for Python
 
 ## Quick Start
 
-Import the package and define your cost matrix.
+Import the the `clap` module from the package and define your cost matrix.
 
 ```python
->>> import clapsolver
+>>> from clapsolver import clap
 >>> costs = [[0, 0],
 ...          [1, 0]]
 
@@ -24,7 +24,7 @@ Import the package and define your cost matrix.
 Solve the linear assignment problem with row 0 forcibly assigned to column 1.
 
 ```python
->>> clapsolver.clap_cost(0, 1, costs)
+>>> clap.cost(0, 1, costs)
 1
 
 ```

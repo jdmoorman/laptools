@@ -11,6 +11,6 @@ __license__ = "MIT license".rstrip(" license")
 __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 
 
-from ._clap import clap_cost
+from . import clap
 
-__all__ = ["clap_cost"]
+__all__ = ["clap"]

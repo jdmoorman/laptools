@@ -4,7 +4,7 @@ from scipy.optimize import linear_sum_assignment as lap
 from ._util import one_hot
 
 
-def clap_cost(i, j, costs):
+def cost(i, j, costs):
     """Compute the total cost of a constrained linear assignment problem.
 
     Parameters
