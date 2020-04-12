@@ -1,8 +1,8 @@
 # clapsolver
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Build Status](https://github.com/jdmoorman/clapsolver/workflows/Build%20Master/badge.svg)](https://github.com/jdmoorman/clapsolver/actions)
+[![Build Status](https://github.com/jdmoorman/clapsolver/workflows/CI/badge.svg)](https://github.com/jdmoorman/clapsolver/actions)
 [![Code Coverage](https://codecov.io/gh/jdmoorman/clapsolver/branch/master/graph/badge.svg)](https://codecov.io/gh/jdmoorman/clapsolver)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Fast constrained linear assignment problem (CLAP) solvers for Python
 
