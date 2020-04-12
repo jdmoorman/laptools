@@ -39,4 +39,5 @@ costs3 = [[4, 1, 3],
     ],
 )
 def test_clap_cost(i, j, costs, expected):
+    """Verify clap.cost works on small examples computable by hand."""
     assert clap.cost(i, j, costs) == expected
