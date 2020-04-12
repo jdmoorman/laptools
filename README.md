@@ -16,8 +16,8 @@ Import the the `clap` module from the package and define your cost matrix.
 
 ```python
 >>> from clapsolver import clap
->>> costs = [[0, 0],
-...          [1, 0]]
+>>> costs = [[0, 0, 1],
+...          [1, 0, 2]]
 
 ```
 
