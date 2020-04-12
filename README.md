@@ -1,5 +1,7 @@
 # clapsolver
 
+[![PyPI Version](https://img.shields.io/pypi/v/clapsolver.svg)](https://pypi.org/project/clapsolver/)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/clapsolver.svg)](https://pypi.org/project/clapsolver/)
 [![Build Status](https://github.com/jdmoorman/clapsolver/workflows/CI/badge.svg)](https://github.com/jdmoorman/clapsolver/actions)
 [![Code Coverage](https://codecov.io/gh/jdmoorman/clapsolver/branch/master/graph/badge.svg)](https://codecov.io/gh/jdmoorman/clapsolver)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
