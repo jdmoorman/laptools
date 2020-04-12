@@ -5,7 +5,7 @@ from ._util import one_hot
 
 
 def cost(i, j, costs):
-    """Compute the total cost of a constrained linear assignment problem.
+    """Compute the minimal cost over all constrained assignments.
 
     Parameters
     ----------
