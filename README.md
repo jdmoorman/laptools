@@ -8,15 +8,24 @@ Fast constrained linear assignment problem (CLAP) solvers for Python
 ---
 
 ## Features
-* Store values and retain the prior value in memory
-* ... some other functionality
+* Solve constrained linear assignment problem with a row forcibly assigned to a particular column
 
 ## Quick Start
+
+Import the the `clap` module from the package and define your cost matrix.
+
 ```python
->>> from clapsolver import Example
->>> a = Example()
->>> a.get_value()
-10
+>>> from clapsolver import clap
+>>> costs = [[0, 0, 1],
+...          [1, 0, 2]]
+
+```
+
+Solve the linear assignment problem with row 0 forcibly assigned to column 1.
+
+```python
+>>> clap.cost(0, 1, costs)
+1
 
 ```
 
