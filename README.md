@@ -7,8 +7,9 @@ Fast constrained linear assignment problem (CLAP) solvers for Python
 
 ---
 
-## Features
-* Solve constrained linear assignment problem with a row forcibly assigned to a particular column
+## Installation
+**Stable Release:** `pip install clapsolver`<br>
+**Development Head:** `pip install git+https://github.com/jdmoorman/clapsolver.git`
 
 ## Quick Start
 
@@ -28,10 +29,6 @@ Solve the linear assignment problem with row 0 forcibly assigned to column 1.
 1
 
 ```
-
-## Installation
-**Stable Release:** `pip install clapsolver`<br>
-**Development Head:** `pip install git+https://github.com/jdmoorman/clapsolver.git`
 
 ## Development
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the code.
