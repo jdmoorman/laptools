@@ -21,13 +21,6 @@ def cost(i, j, costs):
     float
         The total cost of the linear assignment problem solution under the
         constraint that row i is assigned to column j.
-
-    Examples
-    --------
-    >>> costs = [[0, 0],
-    ...          [1, 0]]
-    >>> clap_cost(0, 1, costs)  # Row 0 is constrained to column 1.
-    1
     """
     costs = np.array(costs)
     n_rows, n_cols = costs.shape
