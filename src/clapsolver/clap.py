@@ -24,7 +24,7 @@ def cost(i, j, cost_matrix):
     """
     cost_matrix = np.array(cost_matrix)
 
-    if cost_matrix[i, j] == np.Inf or cost_matrix[i, j] == np.NAN:
+    if not np.isfinite(cost_matrix[i, j]):
         return cost_matrix[i, j]
 
     n_rows, n_cols = cost_matrix.shape
@@ -47,8 +47,10 @@ def costs(cost_matrix):
 
     >>> def costs(cost_matrix):
     ...     total_costs = np.empty_like(cost_matrix)
-    ...     for i, j in np.ndindex(*cost_matrix.shape):
-    ...         total_costs[i, j] = cost(i, j, cost_matrix)
+    ...     num_rows, num_cols = cost_matrix.shape
+    ...     for i in range(num_rows):
+    ...         for j in range(num_cols):
+    ...             total_costs[i, j] = clap.cost(i, j, cost_matrix)
     ...     return total_costs
 
     Parameters
