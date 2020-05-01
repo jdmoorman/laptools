@@ -61,6 +61,7 @@ def costs(cost_matrix):
         corresponds to the total lsap cost under the constraint that row i is
         assigned to column j.
     """
+    cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
     if n_rows > n_cols:
         return costs(cost_matrix.T).T
@@ -143,7 +144,7 @@ def costs(cost_matrix):
             else:
                 sub_cost_matrix = cost_matrix[:, potential_cols]
                 sub_j = np.argwhere(potential_cols == stolen_j)[0]
-                total_cost = costs(i, sub_j, sub_cost_matrix)
+                total_cost = cost(i, sub_j, sub_cost_matrix)
                 total_costs[i, stolen_j] = total_cost
 
             # Give other_i its column back in preparation for the next round.
