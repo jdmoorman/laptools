@@ -23,6 +23,10 @@ def cost(i, j, cost_matrix):
         constraint that row i is assigned to column j.
     """
     cost_matrix = np.array(cost_matrix)
+
+    if cost_matrix[i, j] == np.Inf:
+        return np.Inf
+
     n_rows, n_cols = cost_matrix.shape
 
     # Cost matrix omitting the row and column corresponding to the constraint.
@@ -37,8 +41,6 @@ def cost(i, j, cost_matrix):
 
 def costs(cost_matrix):
     """Solve a constrained linear sum assignment problem for each entry.
-
-    TODO: More thorough testing of this function.
 
     The output of this function is equivalent to, but significantly more
     efficient than,

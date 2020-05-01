@@ -17,6 +17,21 @@ cost_matrix_3 = [[4, 1, 3],
                  [3, 2, 2],
                  [6, 7, 8]]
 
+cost_matrix_4 = [[np.Inf, np.Inf, np.Inf, np.Inf,      3],
+                 [     7, np.Inf,     23, np.Inf, np.Inf],
+                 [    17,     24, np.Inf, np.Inf, np.Inf],
+                 [np.Inf,      6,     13,     20, np.Inf]]
+
+cost_matrix_5 = [[4, 1, 3, np.Inf],
+                 [2, 0, 5, np.Inf],
+                 [3, 2, 2, np.Inf]]
+
+cost_matrix_6 = [[4, 1, 3],
+                 [2, 0, 5],
+                 [np.Inf, np.Inf, np.Inf],
+                 [3, 2, 2],
+                 [6, 7, 8]]
+
 global_cost_1 = np.array([[6, 5, 6],
                           [5, 6, 9],
                           [6, 7, 5]])
@@ -27,6 +42,21 @@ global_cost_2 = np.array([[6, 5, 6, 8],
 
 global_cost_3 = np.array([[6, 5, 6],
                           [5, 6, 9],
+                          [6, 7, 5],
+                          [8, 11, 11]])
+
+global_cost_4 = np.array([[np.Inf, np.Inf, np.Inf, np.Inf,     47],
+                          [    47, np.Inf,     49, np.Inf, np.Inf],
+                          [    49,     47, np.Inf, np.Inf, np.Inf],
+                          [np.Inf,     49,     47,     54, np.Inf]])
+
+global_cost_5 = np.array([[6, 5, 6, np.Inf],
+                          [5, 6, 9, np.Inf],
+                          [6, 7, 5, np.Inf]])
+
+global_cost_6 = np.array([[6, 5, 6],
+                          [5, 6, 9],
+                          [np.Inf, np.Inf, np.Inf],
                           [6, 7, 5],
                           [8, 11, 11]])
 # fmt: on
@@ -63,6 +93,9 @@ class TestClap:
             (cost_matrix_1, global_cost_1),
             (cost_matrix_2, global_cost_2),
             (cost_matrix_3, global_cost_3),
+            (cost_matrix_4, global_cost_4),
+            (cost_matrix_5, global_cost_5),
+            (cost_matrix_6, global_cost_6),
         ],
     )
     def test_clap_costs(self, cost_matrix, expected_global_costs):
