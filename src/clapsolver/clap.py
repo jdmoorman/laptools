@@ -24,8 +24,8 @@ def cost(i, j, cost_matrix):
     """
     cost_matrix = np.array(cost_matrix)
 
-    if cost_matrix[i, j] == np.Inf:
-        return np.Inf
+    if cost_matrix[i, j] == np.Inf or cost_matrix[i, j] == np.NAN:
+        return cost_matrix[i, j]
 
     n_rows, n_cols = cost_matrix.shape
 
