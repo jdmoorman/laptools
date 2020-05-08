@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def augment(cost_matrix, u, v, row4col, col4row, curRow):
+def augment(cost_matrix, curRow, row4col, col4row, u, v):
     """Find the shortest augmenting path for the selected row. Update the dual
        variables. Augment the previous solution.
 
@@ -9,16 +9,16 @@ def augment(cost_matrix, u, v, row4col, col4row, curRow):
     ----------
     cost_matrix : 2darray
          A matrix of costs.
-    u : 1darray
-        The dual cost vector for rows.
-    v : 1darray
-        The dual cost vector for columns.
+    curRow : int
+        Index of the row from which the augmenting starts.
     row4col: 1darray
              Specify the rows to which each column is matched with.
     col4row: 1darray
              Specify the columns to which each row is matched with.
-    curRow : int
-        Index of the row from which the augmenting starts.
+    u : 1darray
+        The dual cost vector for rows.
+    v : 1darray
+        The dual cost vector for columns.
     """
     cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
@@ -93,6 +93,7 @@ def augment(cost_matrix, u, v, row4col, col4row, curRow):
             break
 
     # TODO: Figure out if we need to return anything
+    print(v)
 
 
 def solve_lsap(cost_matrix):
@@ -118,13 +119,60 @@ def solve_lsap(cost_matrix):
 
     # Iteratively build the solution
     for curRow in range(n_rows):
-        augment(cost_matrix, u, v, row4col, col4row, curRow)
+        augment(cost_matrix, curRow, row4col, col4row, u, v)
 
-    import IPython
+    # TODO: Figure out if we should return things in scipy format
+    return row4col, col4row, u, v
 
-    IPython.embed()
 
-    return col4row
+def solve_sub_lsap(cost_matrix, row_removed, row4col, col4row, u, v):
+    """Solve the sub linear sum assignment problem with one row removed.
+
+    Parameters
+    ----------
+    cost_matrix : 2darray
+         A matrix of costs.
+    row_removed : int
+         The index of the row that is to be removed.
+    row4col: 1darray
+             Specify the rows to which each column is matched with.
+    col4row: 1darray
+             Specify the columns to which each row is matched with.
+    """
+    cost_matrix = np.array(cost_matrix)
+    n_rows, n_cols = cost_matrix.shape
+
+    # Update the cost matrix to reflect the removal
+    # TODO: is zero a good number?
+    cost_matrix[row_removed] = 0
+
+    # Update the dual variables
+    u[row_removed] = np.min(cost_matrix[row_removed] - v)
+
+    # Perform another augmenting step, only on the sub-cost-matrix that
+    # involves the rows and columns in the original optimal assignment.
+    # The row to be removed have all of its associated costs set to 0.
+    sub_cost_matrix = cost_matrix[:, col4row]
+    sub_v = v[col4row]
+
+    # Remove the assignment associated with the removed row. Note that in the
+    # submatrix, the removed row and the freed up column have the same index.
+    # TODO: check whether the following expressions are correct
+    sub_col4row = np.arange(n_rows)
+    sub_col4row[row_removed] = -1
+    sub_row4col = np.arange(n_rows)
+    sub_row4col[row_removed] = -1
+
+    # Find the shortest augmenting path for the sub square lsap and augment.
+    augment(sub_cost_matrix, row_removed, sub_row4col, sub_col4row, u, sub_v)
+
+    # Update the original assignment
+    # Note: update every variable that depends on col4row for indexing first.
+    row4col[col4row] = sub_row4col
+    v[col4row] = sub_v
+    col4row = col4row[sub_col4row]
+
+    return row4col, col4row, u, v
 
 
 if __name__ == "__main__":
@@ -142,4 +190,5 @@ if __name__ == "__main__":
     # col4row = np.array([-1, -1, 0, 1])
     # augment(cost_matrix, u, v, row4col, col4row, curRow)
 
-    solve_lsap(cost_matrix)
+    row4col, col4row, u, v = solve_lsap(cost_matrix)
+    row4col, col4row, u, v = solve_sub_lsap(cost_matrix, 2, row4col, col4row, u, v)
