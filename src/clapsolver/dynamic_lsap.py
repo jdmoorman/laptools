@@ -98,7 +98,8 @@ def augment(cost_matrix, curRow, row4col, col4row, u, v):
 
 def solve_lsap(cost_matrix):
     """Solve the rectangular linear sum assignment problem via an augmenting
-       path approach.
+       path approach. Note that we require that number of rows cannot exceed
+       the number of columns.
 
     Parameters
     ----------
@@ -175,6 +176,62 @@ def solve_sub_lsap(cost_matrix, row_removed, row4col, col4row, u, v):
     return row4col, col4row, u, v
 
 
+def linear_sum_assignment(cost_matrix):
+    """Solve the linear sum assignment based on the cost matrix. The return
+       value is the same as in scipy.
+
+    Parameters
+    ----------
+    cost_matrix : 2darray
+         A matrix of costs.
+
+    Returns
+    -------
+    row_ind, col_ind : array
+        An array of row indices and one of corresponding column indices giving
+        the optimal assignment. The cost of the assignment can be computed
+        as ``cost_matrix[row_ind, col_ind].sum()``. The row indices will be
+        sorted; in the case of a square cost matrix they will be equal to
+        ``numpy.arange(cost_matrix.shape[0])``.
+    """
+    cost_matrix = np.array(cost_matrix)
+
+    # The following are taken from scipy implementation.
+    if len(cost_matrix.shape) != 2:
+        raise ValueError(
+            "expected a matrix (2-d array), got a %r array" % (cost_matrix.shape,)
+        )
+
+    # if not (
+    #     np.issubdtype(cost_matrix.dtype, np.number)
+    #     or cost_matrix.dtype == np.dtype(np.bool)
+    # ):
+    #     raise ValueError(
+    #         "expected a matrix containing numerical entries, got %s"
+    #         % (cost_matrix.dtype,)
+    #     )
+
+    if np.any(np.isneginf(cost_matrix) | np.isnan(cost_matrix)):
+        raise ValueError("matrix contains invalid numeric entries")
+
+    # cost_matrix = cost_matrix.astype(np.double)
+    a = np.arange(np.min(cost_matrix.shape))
+
+    # If the cost_matrix has more rows than columns
+    if cost_matrix.shape[1] < cost_matrix.shape[0]:
+        # Here, col4row holds the rows in cost_matrix that are in the assignment
+        _, col4row, _, _ = solve_lsap(cost_matrix.T)
+
+        # Sort the row indexes in the assignment
+        idx_sorted = np.argsort(col4row)
+
+        return (col4row[idx_sorted], a[idx_sorted])
+    # If the cost_matrix has more columns than rows
+    else:
+        _, col4row, _, _ = solve_lsap(cost_matrix)
+        return (a, col4row)
+
+
 if __name__ == "__main__":
     # fmt: off
     cost_matrix = [[np.inf, np.inf, np.inf, np.inf,      3],
@@ -191,4 +248,13 @@ if __name__ == "__main__":
     # augment(cost_matrix, u, v, row4col, col4row, curRow)
 
     row4col, col4row, u, v = solve_lsap(cost_matrix)
-    row4col, col4row, u, v = solve_sub_lsap(cost_matrix, 2, row4col, col4row, u, v)
+    import IPython
+
+    IPython.embed()
+
+    row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
+    import IPython
+
+    IPython.embed()
+
+    # row4col, col4row, u, v = solve_sub_lsap(cost_matrix, 2, row4col, col4row, u, v)
