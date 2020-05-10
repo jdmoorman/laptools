@@ -57,7 +57,7 @@ def augment(cost_matrix, curRow, row4col, col4row, u, v):
 
         # If the cost matrix is infeasible
         if minVal == np.inf:
-            raise Exception("The cost matrix is infeasible.")
+            raise ValueError("The cost matrix is infeasible.")
 
         if row4col[idx_min] == -1:
             sink = idx_min
@@ -71,7 +71,7 @@ def augment(cost_matrix, curRow, row4col, col4row, u, v):
 
     # If no augmenting path has been found
     if sink < 0:
-        raise Exception("No augmenting path has been found.")
+        raise ValueError("No augmenting path has been found.")
 
     # Update the dual variables
     for i in SR:
@@ -176,7 +176,7 @@ def solve_sub_lsap(cost_matrix, row_removed, row4col, col4row, u, v):
     return row4col, col4row, u, v
 
 
-def linear_sum_assignment(cost_matrix):
+def linear_sum_assignment(cost_matrix, maximize=False):
     """Solve the linear sum assignment based on the cost matrix. The return
        value is the same as in scipy.
 
@@ -202,14 +202,18 @@ def linear_sum_assignment(cost_matrix):
             "expected a matrix (2-d array), got a %r array" % (cost_matrix.shape,)
         )
 
-    # if not (
-    #     np.issubdtype(cost_matrix.dtype, np.number)
-    #     or cost_matrix.dtype == np.dtype(np.bool)
-    # ):
-    #     raise ValueError(
-    #         "expected a matrix containing numerical entries, got %s"
-    #         % (cost_matrix.dtype,)
-    #     )
+    # fmt: off
+    # TODO: the following is not passing flake8
+    if not (np.issubdtype(cost_matrix.dtype, np.number) or
+            cost_matrix.dtype == np.dtype(np.bool)):
+        raise ValueError(
+            "expected a matrix containing numerical entries, got %s"
+            % (cost_matrix.dtype,)
+        )
+    # fmt: on
+
+    if maximize:
+        cost_matrix = -cost_matrix
 
     if np.any(np.isneginf(cost_matrix) | np.isnan(cost_matrix)):
         raise ValueError("matrix contains invalid numeric entries")
@@ -248,11 +252,8 @@ if __name__ == "__main__":
     # augment(cost_matrix, u, v, row4col, col4row, curRow)
 
     row4col, col4row, u, v = solve_lsap(cost_matrix)
-    import IPython
-
-    IPython.embed()
-
     row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
+
     import IPython
 
     IPython.embed()
