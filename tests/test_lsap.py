@@ -1,4 +1,4 @@
-# Additional LSAP tests from scipy
+# Included LSAP tests from Scipy
 # Author: Brian M. Clapper, G. Varoquaux, Lars Buitinck
 # License: BSD
 
