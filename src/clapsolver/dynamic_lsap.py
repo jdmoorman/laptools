@@ -253,11 +253,36 @@ if __name__ == "__main__":
     # col4row = np.array([-1, -1, 0, 1])
     # augment(cost_matrix, u, v, row4col, col4row, cur_row)
 
-    row4col, col4row, u, v = solve_lsap(cost_matrix)
-    row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
-
-    import IPython
-
-    IPython.embed()
-
+    # row4col, col4row, u, v = solve_lsap(cost_matrix)
+    # row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
     # row4col, col4row, u, v = solve_sub_lsap(cost_matrix, 2, row4col, col4row, u, v)
+
+    from numpy.testing import assert_array_equal
+    from scipy.optimize import linear_sum_assignment as lap
+    import time
+
+    lsap_time = 0
+    scipy_lap_time = 0
+    num_rounds = 1
+    n_rows, n_cols = 500, 10000
+
+    for i in range(num_rounds):
+        cost_matrix = np.random.rand(n_rows, n_cols)
+
+        start_time = time.time()
+        row_ind_1, col_ind_1 = linear_sum_assignment(cost_matrix)
+        lsap_time += time.time() - start_time
+
+        start_time = time.time()
+        row_ind_2, col_ind_2 = lap(cost_matrix)
+        scipy_lap_time += time.time() - start_time
+
+        assert_array_equal(row_ind_1, row_ind_2)
+        assert_array_equal(col_ind_1, col_ind_2)
+
+    print("We solve {} LSAPs with size ({}, {}).".format(num_rounds, n_rows, n_cols))
+    print(
+        "Our implementation takes {}s. Scipy implementation takes {}s.".format(
+            lsap_time, scipy_lap_time
+        )
+    )
