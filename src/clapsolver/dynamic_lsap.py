@@ -1,15 +1,16 @@
 import numpy as np
 
 
-def augment(cost_matrix, curRow, row4col, col4row, u, v):
+def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     """Find the shortest augmenting path for the selected row. Update the dual
        variables. Augment the previous solution.
 
     Parameters
     ----------
     cost_matrix : 2darray
-         A matrix of costs.
-    curRow : int
+         A matrix of costs. Note that the number of rows cannot exceed the
+         number of columns. It also cannot hold np.nan values.
+    cur_row : int
         Index of the row from which the augmenting starts.
     row4col: 1darray
              Specify the rows to which each column is matched with.
@@ -23,40 +24,42 @@ def augment(cost_matrix, curRow, row4col, col4row, u, v):
     cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
 
-    minVal = 0
-    row_idx = curRow
+    min_val = 0
+    row_idx = cur_row
     remaining = set(range(n_cols))
 
     path = np.full(n_cols, -1)
-    shortestPathCosts = np.full(n_cols, np.inf)
+    shortest_path_costs = np.full(n_cols, np.inf)
 
     # TODO: figure out a better way to store these vertices
+    # SR: row vertices visited in the shortest augmenting path
+    # SC: col vertices visited in the shortest augmenting path
     SR, SC = set(), set()
 
     sink = -1
     while sink == -1:
-        idx_min = -1  # idx_min = argmin(shortestPathCosts)
+        idx_min = -1  # idx_min = argmin(shortest_path_costs)
         lowest = np.inf
         SR.add(row_idx)
 
         # Iterates thru all the column vertices that have not been visited
         for col_idx in remaining:
-            r = minVal + cost_matrix[row_idx, col_idx] - u[row_idx] - v[col_idx]
+            r = min_val + cost_matrix[row_idx, col_idx] - u[row_idx] - v[col_idx]
 
-            if r < shortestPathCosts[col_idx]:
+            if r < shortest_path_costs[col_idx]:
                 path[col_idx] = row_idx
-                shortestPathCosts[col_idx] = r
+                shortest_path_costs[col_idx] = r
 
-            if shortestPathCosts[col_idx] < lowest or (
-                shortestPathCosts[col_idx] == lowest and row4col[col_idx] == -1
+            if shortest_path_costs[col_idx] < lowest or (
+                shortest_path_costs[col_idx] == lowest and row4col[col_idx] == -1
             ):
-                lowest = shortestPathCosts[col_idx]
+                lowest = shortest_path_costs[col_idx]
                 idx_min = col_idx
 
-        minVal = lowest
+        min_val = lowest
 
         # If the cost matrix is infeasible
-        if minVal == np.inf:
+        if min_val == np.inf:
             raise ValueError("The cost matrix is infeasible.")
 
         if row4col[idx_min] == -1:
@@ -75,13 +78,13 @@ def augment(cost_matrix, curRow, row4col, col4row, u, v):
 
     # Update the dual variables
     for i in SR:
-        if i == curRow:
-            u[i] += minVal
+        if i == cur_row:
+            u[i] += min_val
         else:
-            u[i] += minVal - shortestPathCosts[col4row[i]]
+            u[i] += min_val - shortest_path_costs[col4row[i]]
 
     for j in SC:
-        v[j] -= minVal - shortestPathCosts[j]
+        v[j] -= min_val - shortest_path_costs[j]
 
     # Augment the Previous Solution
     col_idx = sink
@@ -89,22 +92,21 @@ def augment(cost_matrix, curRow, row4col, col4row, u, v):
         row_idx = path[col_idx]
         row4col[col_idx] = row_idx
         col4row[row_idx], col_idx = col_idx, col4row[row_idx]
-        if row_idx == curRow:
+        if row_idx == cur_row:
             break
 
     # TODO: Figure out if we need to return anything
-    print(v)
 
 
 def solve_lsap(cost_matrix):
     """Solve the rectangular linear sum assignment problem via an augmenting
-       path approach. Note that we require that number of rows cannot exceed
-       the number of columns.
+       path approach. Note that the cost matrix can be rectangular, but we
+       require that its number of rows cannot exceed its number of columns.
 
     Parameters
     ----------
     cost_matrix : 2darray
-         A matrix of costs.
+         A matrix of costs. The number of rows cannot exceed the number of columns.
 
     Returns
     -------
@@ -119,8 +121,8 @@ def solve_lsap(cost_matrix):
     row4col = np.full(n_cols, -1)
 
     # Iteratively build the solution
-    for curRow in range(n_rows):
-        augment(cost_matrix, curRow, row4col, col4row, u, v)
+    for cur_row in range(n_rows):
+        augment(cost_matrix, cur_row, row4col, col4row, u, v)
 
     # TODO: Figure out if we should return things in scipy format
     return row4col, col4row, u, v
@@ -244,12 +246,12 @@ if __name__ == "__main__":
                    [np.inf,      6,     13,     20, np.inf]]
     # fmt: on
 
-    # curRow = 1
+    # cur_row = 1
     # u = np.array([0, 0, 17, 6])
     # v = np.array([0, 0, 0, 0, 0])
     # row4col = np.array([2, 3, -1, -1, -1])
     # col4row = np.array([-1, -1, 0, 1])
-    # augment(cost_matrix, u, v, row4col, col4row, curRow)
+    # augment(cost_matrix, u, v, row4col, col4row, cur_row)
 
     row4col, col4row, u, v = solve_lsap(cost_matrix)
     row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
