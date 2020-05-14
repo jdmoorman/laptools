@@ -128,8 +128,10 @@ def solve_lsap(cost_matrix):
     return row4col, col4row, u, v
 
 
-def solve_sub_lsap(cost_matrix, row_removed, row4col, col4row, u, v):
+def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v):
     """Solve the sub linear sum assignment problem with one row removed.
+
+    Note: the removed row will still be assigned to a column.
 
     Parameters
     ----------
@@ -141,21 +143,27 @@ def solve_sub_lsap(cost_matrix, row_removed, row4col, col4row, u, v):
              Specify the rows to which each column is matched with.
     col4row: 1darray
              Specify the columns to which each row is matched with.
+    u : 1darray
+        The dual cost vector for rows.
+    v : 1darray
+        The dual cost vector for columns.
     """
     cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
 
-    # Update the cost matrix to reflect the removal
-    # TODO: is zero a good number?
-    cost_matrix[row_removed] = 0
+    # Update the cost matrix to reflect the row removal.
+    # Create a copy of the cost matrix and update all costs associated with
+    # row_removed to be zero. We don't modify the original cost values.
+    cost_matrix_copy = cost_matrix.copy()
+    cost_matrix_copy[row_removed] = 0
 
     # Update the dual variables
-    u[row_removed] = np.min(cost_matrix[row_removed] - v)
+    u[row_removed] = np.min(cost_matrix_copy[row_removed] - v)
 
     # Perform another augmenting step, only on the sub-cost-matrix that
     # involves the rows and columns in the original optimal assignment.
     # The row to be removed have all of its associated costs set to 0.
-    sub_cost_matrix = cost_matrix[:, col4row]
+    sub_cost_matrix = cost_matrix_copy[:, col4row]
     sub_v = v[col4row]
 
     # Remove the assignment associated with the removed row. Note that in the
@@ -174,6 +182,49 @@ def solve_sub_lsap(cost_matrix, row_removed, row4col, col4row, u, v):
     row4col[col4row] = sub_row4col
     v[col4row] = sub_v
     col4row = col4row[sub_col4row]
+
+    # TODO: the variables should be modified in place.
+    # Is the return statement still necessary?
+    return row4col, col4row, u, v
+
+
+def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v):
+    """Solve the sub linear sum assignment problem with one column removed.
+
+    TODO: Add tests for this function.
+
+    Parameters
+    ----------
+    cost_matrix : 2darray
+         A matrix of costs.
+    col_removed : int
+         The index of the column that is to be removed.
+    row4col: 1darray
+             Specify the rows to which each column is matched with.
+    col4row: 1darray
+             Specify the columns to which each row is matched with.
+    u : 1darray
+        The dual cost vector for rows.
+    v : 1darray
+        The dual cost vector for columns.
+    """
+    cost_matrix = np.array(cost_matrix)
+
+    # Update the cost matrix to reflect the column removal.
+    # Create a copy of the cost matrix and update all costs associated with
+    # col_removed to be infinity. We don't modify the original cost values.
+    cost_matrix_copy = cost_matrix.copy()
+    cost_matrix[:, col_removed] = np.inf
+
+    # TODO: do we need to update the dual variables?
+
+    # Removed the assignment associated with the removed column.
+    row_freed = row4col[col_removed]
+    col4row[row_freed] = -1
+    row4col[col_removed] = -1
+
+    # Perform another augmenting step
+    augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
 
     return row4col, col4row, u, v
 
@@ -286,3 +337,7 @@ if __name__ == "__main__":
             lsap_time, scipy_lap_time
         )
     )
+
+    import IPython
+
+    IPython.embed()

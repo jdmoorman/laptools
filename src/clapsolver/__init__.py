@@ -11,6 +11,6 @@ __license__ = "MIT license".rstrip(" license")
 __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 
 
-from . import clap
+from . import clap, dynamic_lsap
 
-__all__ = ["clap"]
+__all__ = ["clap", "dynamic_lsap"]
