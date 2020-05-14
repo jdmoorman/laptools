@@ -136,6 +136,8 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     """Solve the sub linear sum assignment problem with one row removed.
 
     Note: the removed row will still be assigned to a column.
+    Note: While the cost matrix will not be modified, the dual variables would
+          be updated as if the costs of removed row are uniformly zero.
 
     Parameters
     ----------
