@@ -198,6 +198,8 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     """Solve the sub linear sum assignment problem with one column removed.
 
     TODO: Add tests for this function.
+    Note: While the cost matrix will not be modified, the dual variables would
+          be updated as if the removed column does not exist.
 
     Parameters
     ----------
@@ -214,7 +216,15 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     v : 1darray
         The dual cost vector for columns.
     """
+    row_freed = row4col[col_removed]
+
+    # If the removed column is resigned to nothing
+    # No need to reassign anything
+    if row_freed == -1:
+        return
+
     cost_matrix = np.array(cost_matrix)
+    cost_matrix = cost_matrix.astype(np.double)
 
     # Update the cost matrix to reflect the column removal.
     # Create a copy of the cost matrix and update all costs associated with
@@ -226,14 +236,13 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     # TODO: do we need to update the dual variables?
 
     # Removed the assignment associated with the removed column.
-    row_freed = row4col[col_removed]
     col4row[row_freed] = -1
     row4col[col_removed] = -1
 
     # Perform another augmenting step
     augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
 
-    return row4col, col4row, u, v
+    # return row4col, col4row, u, v
 
 
 def linear_sum_assignment(cost_matrix, maximize=False):
