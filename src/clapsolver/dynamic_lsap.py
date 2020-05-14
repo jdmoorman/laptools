@@ -113,6 +113,10 @@ def solve_lsap(cost_matrix):
     TODO: figure out what is returned
     """
     cost_matrix = np.array(cost_matrix)
+
+    # cast the dtype of cost_matrix as double
+    cost_matrix = cost_matrix.astype(np.double)
+
     n_rows, n_cols = cost_matrix.shape
 
     u = np.zeros(n_rows)
@@ -214,7 +218,7 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     # Create a copy of the cost matrix and update all costs associated with
     # col_removed to be infinity. We don't modify the original cost values.
     cost_matrix_copy = cost_matrix.copy()
-    cost_matrix[:, col_removed] = np.inf
+    cost_matrix_copy[:, col_removed] = np.inf
 
     # TODO: do we need to update the dual variables?
 
@@ -314,8 +318,8 @@ if __name__ == "__main__":
 
     lsap_time = 0
     scipy_lap_time = 0
-    num_rounds = 1
-    n_rows, n_cols = 500, 10000
+    num_rounds = 10000
+    n_rows, n_cols = 5, 10
 
     for i in range(num_rounds):
         cost_matrix = np.random.rand(n_rows, n_cols)
