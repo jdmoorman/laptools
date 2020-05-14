@@ -185,7 +185,7 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     # Note: update every variable that depends on col4row for indexing first.
     row4col[col4row] = sub_row4col
     v[col4row] = sub_v
-    col4row = col4row[sub_col4row]
+    col4row[:] = col4row[sub_col4row]
 
     # TODO: the variables should be modified in place.
     # Is the return statement still necessary?
@@ -217,6 +217,7 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     # Update the cost matrix to reflect the column removal.
     # Create a copy of the cost matrix and update all costs associated with
     # col_removed to be infinity. We don't modify the original cost values.
+    # Note: need to make sure that cost_matrix has dtype float.
     cost_matrix_copy = cost_matrix.copy()
     cost_matrix_copy[:, col_removed] = np.inf
 
@@ -295,11 +296,10 @@ def linear_sum_assignment(cost_matrix, maximize=False):
 
 if __name__ == "__main__":
     # fmt: off
-    cost_matrix = [[np.inf, np.inf, np.inf, np.inf,      3],
-                   [     7, np.inf,     23, np.inf, np.inf],
-                   [    17,     24, np.inf, np.inf, np.inf],
-                   [np.inf,      6,     13,     20, np.inf]]
-    # fmt: on
+    # cost_matrix = [[np.inf, np.inf, np.inf, np.inf,      3],
+    #                [     7, np.inf,     23, np.inf, np.inf],
+    #                [    17,     24, np.inf, np.inf, np.inf],
+    #                [np.inf,      6,     13,     20, np.inf]]
 
     # cur_row = 1
     # u = np.array([0, 0, 17, 6])
@@ -312,36 +312,22 @@ if __name__ == "__main__":
     # row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
     # row4col, col4row, u, v = solve_sub_lsap(cost_matrix, 2, row4col, col4row, u, v)
 
-    from numpy.testing import assert_array_equal
+    cost_matrix = [[6, 4, 6, 9, 2],
+                   [0, 5, 6, 8, 6],
+                   [1, 5, 6, 4, 3]]
+    cost_matrix = np.array(cost_matrix)
+    removed_row = 1
+
     from scipy.optimize import linear_sum_assignment as lap
-    import time
 
-    lsap_time = 0
-    scipy_lap_time = 0
-    num_rounds = 10000
-    n_rows, n_cols = 5, 10
-
-    for i in range(num_rounds):
-        cost_matrix = np.random.rand(n_rows, n_cols)
-
-        start_time = time.time()
-        row_ind_1, col_ind_1 = linear_sum_assignment(cost_matrix)
-        lsap_time += time.time() - start_time
-
-        start_time = time.time()
-        row_ind_2, col_ind_2 = lap(cost_matrix)
-        scipy_lap_time += time.time() - start_time
-
-        assert_array_equal(row_ind_1, row_ind_2)
-        assert_array_equal(col_ind_1, col_ind_2)
-
-    print("We solve {} LSAPs with size ({}, {}).".format(num_rounds, n_rows, n_cols))
-    print(
-        "Our implementation takes {}s. Scipy implementation takes {}s.".format(
-            lsap_time, scipy_lap_time
-        )
-    )
+    row_idx_1, col_idx_1 = lap(cost_matrix)
+    remove = np.array([True, False, True])
+    sub_cost_matrix = cost_matrix[remove, :]
+    sub_row_idx_1, sub_col_idx_1 = lap(sub_cost_matrix)
+    row4col, col4row, u, v = solve_lsap(cost_matrix)
+    solve_lsap_with_removed_row(cost_matrix, removed_row, row4col, col4row, u, v)
 
     import IPython
-
     IPython.embed()
+
+    # fmt: on
