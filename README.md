@@ -33,5 +33,11 @@ Solve the linear assignment problem with row 0 forcibly assigned to column 1.
 
 ```
 
+```python
+>>> print(10)
+11
+
+```
+
 ## Development
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the code.
