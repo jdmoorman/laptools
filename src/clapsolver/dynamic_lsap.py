@@ -8,8 +8,8 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     Parameters
     ----------
     cost_matrix : 2darray
-         A matrix of costs. Note that the number of rows cannot exceed the
-         number of columns. It also cannot hold np.nan values.
+         A numpy matrix of costs. Note that the number of rows cannot exceed
+         the number of columns. It also cannot hold np.nan values.
     cur_row : int
         Index of the row from which the augmenting starts.
     row4col: 1darray
@@ -21,7 +21,6 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     v : 1darray
         The dual cost vector for columns.
     """
-    cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
 
     min_val = 0
@@ -31,7 +30,6 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     path = np.full(n_cols, -1)
     shortest_path_costs = np.full(n_cols, np.inf)
 
-    # TODO: figure out a better way to store these vertices
     # SR: row vertices visited in the shortest augmenting path
     # SC: col vertices visited in the shortest augmenting path
     SR, SC = set(), set()
@@ -95,8 +93,6 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
         if row_idx == cur_row:
             break
 
-    # TODO: Figure out if we need to return anything
-
 
 def solve_lsap(cost_matrix):
     """Solve the rectangular linear sum assignment problem via an augmenting
@@ -110,14 +106,20 @@ def solve_lsap(cost_matrix):
 
     Returns
     -------
-    TODO: figure out what is returned
+    row4col: 1darray
+             Specify the rows to which each column is matched with.
+    col4row: 1darray
+             Specify the columns to which each row is matched with.
+    u : 1darray
+        The dual cost vector for rows.
+    v : 1darray
+        The dual cost vector for columns.
     """
     cost_matrix = np.array(cost_matrix)
+    n_rows, n_cols = cost_matrix.shape
 
     # cast the dtype of cost_matrix as double
     cost_matrix = cost_matrix.astype(np.double)
-
-    n_rows, n_cols = cost_matrix.shape
 
     u = np.zeros(n_rows)
     v = np.zeros(n_cols)
@@ -128,7 +130,6 @@ def solve_lsap(cost_matrix):
     for cur_row in range(n_rows):
         augment(cost_matrix, cur_row, row4col, col4row, u, v)
 
-    # TODO: Figure out if we should return things in scipy format
     return row4col, col4row, u, v
 
 
@@ -189,10 +190,6 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     v[col4row] = sub_v
     col4row[:] = col4row[sub_col4row]
 
-    # TODO: the variables should be modified in place.
-    # Is the return statement still necessary?
-    return row4col, col4row, u, v
-
 
 def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v):
     """Solve the sub linear sum assignment problem with one column removed.
@@ -241,8 +238,6 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
 
     # Perform another augmenting step
     augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
-
-    # return row4col, col4row, u, v
 
 
 def linear_sum_assignment(cost_matrix, maximize=False):
@@ -303,42 +298,3 @@ def linear_sum_assignment(cost_matrix, maximize=False):
     else:
         _, col4row, _, _ = solve_lsap(cost_matrix)
         return (a, col4row)
-
-
-if __name__ == "__main__":
-    # fmt: off
-    # cost_matrix = [[np.inf, np.inf, np.inf, np.inf,      3],
-    #                [     7, np.inf,     23, np.inf, np.inf],
-    #                [    17,     24, np.inf, np.inf, np.inf],
-    #                [np.inf,      6,     13,     20, np.inf]]
-
-    # cur_row = 1
-    # u = np.array([0, 0, 17, 6])
-    # v = np.array([0, 0, 0, 0, 0])
-    # row4col = np.array([2, 3, -1, -1, -1])
-    # col4row = np.array([-1, -1, 0, 1])
-    # augment(cost_matrix, u, v, row4col, col4row, cur_row)
-
-    # row4col, col4row, u, v = solve_lsap(cost_matrix)
-    # row_ind, col_ind = linear_sum_assignment(np.array(cost_matrix).T)
-    # row4col, col4row, u, v = solve_sub_lsap(cost_matrix, 2, row4col, col4row, u, v)
-
-    cost_matrix = [[6, 4, 6, 9, 2],
-                   [0, 5, 6, 8, 6],
-                   [1, 5, 6, 4, 3]]
-    cost_matrix = np.array(cost_matrix)
-    removed_row = 1
-
-    from scipy.optimize import linear_sum_assignment as lap
-
-    row_idx_1, col_idx_1 = lap(cost_matrix)
-    remove = np.array([True, False, True])
-    sub_cost_matrix = cost_matrix[remove, :]
-    sub_row_idx_1, sub_col_idx_1 = lap(sub_cost_matrix)
-    row4col, col4row, u, v = solve_lsap(cost_matrix)
-    solve_lsap_with_removed_row(cost_matrix, removed_row, row4col, col4row, u, v)
-
-    import IPython
-    IPython.embed()
-
-    # fmt: on
