@@ -67,7 +67,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-docs/clapsolver.*rst
+docs/laptools.*rst
 
 # PyBuilder
 target/

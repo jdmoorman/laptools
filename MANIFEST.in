@@ -9,4 +9,4 @@ include tox.ini
 recursive-include tests *.py
 recursive-exclude * *.py[co]
 
-graft src/clapsolver/data
+graft src/laptools/data
