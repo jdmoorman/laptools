@@ -7,8 +7,8 @@ import random
 import numpy as np
 from scipy.optimize import linear_sum_assignment as lap
 
-from clapsolver._util import one_hot
-from clapsolver.dynamic_lsap import (
+from laptools._util import one_hot
+from laptools.dynamic_lsap import (
     solve_lsap,
     solve_lsap_with_removed_col,
     solve_lsap_with_removed_row,

@@ -8,7 +8,7 @@ from pytest import raises as assert_raises
 from scipy.optimize import linear_sum_assignment as lap
 from scipy.sparse.sputils import matrix
 
-from clapsolver.dynamic_lsap import linear_sum_assignment
+from laptools.dynamic_lsap import linear_sum_assignment
 
 
 # fmt: off

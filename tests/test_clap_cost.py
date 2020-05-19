@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from clapsolver import clap
+from laptools import clap
 
 # fmt: off
 cost_matrix_1 = [[4, 1, 3],
