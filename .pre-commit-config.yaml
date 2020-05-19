@@ -10,7 +10,7 @@ repos:
   hooks:
     - id: flake8
       language_version: python3.7
-      args: ['--ignore=E501,E201,E241'] # Handled by Black
+      args: ['--ignore=E501,E201,E241,W504,E741,E302,W503'] # Handled by Black
 
 - repo: https://github.com/asottile/seed-isort-config
   rev: v2.1.0
