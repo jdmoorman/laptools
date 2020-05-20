@@ -1,12 +1,14 @@
-# laptools
+![Black Logo](logo.png)
 
-[![PyPI Version](https://img.shields.io/pypi/v/laptools.svg)](https://pypi.org/project/laptools/)
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/laptools.svg)](https://pypi.org/project/laptools/)
-[![Build Status](https://github.com/jdmoorman/laptools/workflows/CI/badge.svg)](https://github.com/jdmoorman/laptools/actions)
-[![Code Coverage](https://codecov.io/gh/jdmoorman/laptools/branch/master/graph/badge.svg)](https://codecov.io/gh/jdmoorman/laptools)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+<h2 align="center">Fast Assignment Problem Solvers</h2>
 
-Fast constrained linear assignment problem (CLAP) solvers for Python
+<p align="center">
+<a href="https://pypi.org/project/laptools/"><img alt="PyPI Version" src="https://img.shields.io/pypi/v/laptools.svg"></a>
+<a href="https://pypi.org/project/laptools/"><img alt="Supported Python Versions" src="https://img.shields.io/pypi/pyversions/laptools.svg"></a>
+<a href="https://github.com/jdmoorman/laptools/actions"><img alt="Build Status" src="https://github.com/jdmoorman/laptools/workflows/CI/badge.svg"></a>
+<a href="https://codecov.io/gh/jdmoorman/laptools"><img alt="Code Coverage" src="https://codecov.io/gh/jdmoorman/laptools/branch/master/graph/badge.svg"></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
 
 ---
 

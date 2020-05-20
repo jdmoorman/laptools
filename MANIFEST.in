@@ -3,6 +3,7 @@ include *.md
 include *.yaml
 include .editorconfig
 include .isort.cfg
+include *.png
 
 # Tests
 include tox.ini
