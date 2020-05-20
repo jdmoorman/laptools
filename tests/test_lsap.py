@@ -78,21 +78,21 @@ def test_linear_sum_assignment_input_validation():
     assert_array_equal(linear_sum_assignment(C),
                        linear_sum_assignment(matrix(C)))
 
-    I = np.identity(3)
-    assert_array_equal(linear_sum_assignment(I.astype(np.bool)),
-                       linear_sum_assignment(I))
-    assert_raises(ValueError, linear_sum_assignment, I.astype(str))
+    eye = np.identity(3)
+    assert_array_equal(linear_sum_assignment(eye.astype(np.bool)),
+                       linear_sum_assignment(eye))
+    assert_raises(ValueError, linear_sum_assignment, eye.astype(str))
 
-    I[0][0] = np.nan
-    assert_raises(ValueError, linear_sum_assignment, I)
+    eye[0][0] = np.nan
+    assert_raises(ValueError, linear_sum_assignment, eye)
 
-    I = np.identity(3)
-    I[1][1] = -np.inf
-    assert_raises(ValueError, linear_sum_assignment, I)
+    eye = np.identity(3)
+    eye[1][1] = -np.inf
+    assert_raises(ValueError, linear_sum_assignment, eye)
 
-    I = np.identity(3)
-    I[:, 0] = np.inf
-    assert_raises(ValueError, linear_sum_assignment, I)
+    eye = np.identity(3)
+    eye[:, 0] = np.inf
+    assert_raises(ValueError, linear_sum_assignment, eye)
 
 # fmt: on
 

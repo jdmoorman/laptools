@@ -266,15 +266,14 @@ def linear_sum_assignment(cost_matrix, maximize=False):
             "expected a matrix (2-d array), got a %r array" % (cost_matrix.shape,)
         )
 
-    # fmt: off
-    # TODO: the following is not passing flake8
-    if not (np.issubdtype(cost_matrix.dtype, np.number) or
-            cost_matrix.dtype == np.dtype(np.bool)):
+    if not (
+        np.issubdtype(cost_matrix.dtype, np.number)
+        or cost_matrix.dtype == np.dtype(np.bool)
+    ):
         raise ValueError(
             "expected a matrix containing numerical entries, got %s"
             % (cost_matrix.dtype,)
         )
-    # fmt: on
 
     if maximize:
         cost_matrix = -cost_matrix
