@@ -25,6 +25,12 @@ setup_requirements = [
 bench_requirements = [
     "pyperf",
     "matplotlib",
+    "numpy",
+    "scipy",
+    "munkres",
+    "lap",
+    "lapsolver",
+    "lapjv",
 ]
 
 dev_requirements = [
