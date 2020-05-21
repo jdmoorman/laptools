@@ -22,7 +22,7 @@ setup_requirements = [
     "pytest-runner",
 ]
 
-bench_requirements = [
+perf_requirements = [
     "pyperf",
     "matplotlib",
     "numpy",
@@ -37,7 +37,7 @@ dev_requirements = [
     *test_requirements,
     *docs_requirements,
     *setup_requirements,
-    *bench_requirements,
+    *perf_requirements,
     "pre-commit",
     "bumpversion>=0.5.3",
     "ipython>=7.5.0",
@@ -53,14 +53,14 @@ extra_requirements = {
     "docs": docs_requirements,
     "setup": setup_requirements,
     "dev": dev_requirements,
-    "bench": bench_requirements,
+    "perf": perf_requirements,
     "all": [
         *requirements,
         *test_requirements,
         *docs_requirements,
         *setup_requirements,
         *dev_requirements,
-        *bench_requirements,
+        *perf_requirements,
     ],
 }
 
