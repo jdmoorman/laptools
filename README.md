@@ -1,3 +1,5 @@
+<H2 style="color:orange;">laptools is currently unstable.</H2>
+
 ![Black Logo](logo.png)
 
 <h2 align="center">Fast Assignment Problem Solvers</h2>
@@ -11,8 +13,6 @@
 </p>
 
 ---
-
-<H2 style="color:orange;">laptools is currently unstable.</H2>
 
 ## Installation
 
