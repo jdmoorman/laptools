@@ -14,23 +14,26 @@ def get_solvers():
     }
 
 
-def time_func(loops, solver, cost_matrix):
+def time_func(inner_loops, solver, shape):
+    cost_matrix = np.random.random(shape)
     t0 = pyperf.perf_counter()
-    for loops in range(loops):
+    for i in range(inner_loops):
         solver(cost_matrix)
     return pyperf.perf_counter() - t0
+
+
+def get_bench_name(size, solver_name):
+    return "{} {}".format(size, solver_name)
 
 
 def main():
     runner = pyperf.Runner()
     solvers = get_solvers()
-    sizes = 2 ** np.arange(3, 11)  # [8, 16, ..., 1024]
-    sizes = 2 ** np.arange(3, 4)
+    sizes = 2 ** np.arange(3, 11)
     for size in sizes:
         for solver_name, solver_func in solvers.items():
-            bench_name = "{} {}".format(size, solver_name)
-            cost_matrix = np.random.random((size, size))
-            runner.bench_time_func(bench_name, time_func, solver_func, cost_matrix)
+            bench_name = get_bench_name(size, solver_name)
+            runner.bench_time_func(bench_name, time_func, solver_func, (size, size))
 
 
 if __name__ == "__main__":
