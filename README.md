@@ -1,3 +1,5 @@
+<H2 style="color:orange;">laptools is currently unstable.</H2>
+
 ![Black Logo](logo.png)
 
 <h2 align="center">Fast Assignment Problem Solvers</h2>
@@ -13,27 +15,19 @@
 ---
 
 ## Installation
-**Stable Release:** `pip install laptools`<br>
-**Development Head:** `pip install git+https://github.com/jdmoorman/laptools.git`
 
-## Quick Start
+To install laptools, run this command in your terminal:
 
-Import the the `clap` module from the package and define your cost matrix.
-
-```python
->>> from laptools import clap
->>> costs = [[0, 0, 1],
-...          [1, 0, 2]]
-
+```bash
+$ pip install -U laptools
 ```
 
-Solve the linear assignment problem with row 0 forcibly assigned to column 1.
+This is the preferred method to install laptools,
+as it will always install the most recent release.
 
-```python
->>> clap.cost(0, 1, costs)
-1
-
-```
+If you don't have [pip](https://pip.pypa.io) installed,
+these [installation instructions](http://docs.python-guide.org/en/latest/starting/installation/) can guide
+you through the process.
 
 ## Development
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the code.
