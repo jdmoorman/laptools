@@ -70,10 +70,6 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
         # Remove the visited column from remaining
         remaining.remove(idx_min)
 
-    # If no augmenting path has been found
-    if sink < 0:
-        raise ValueError("No augmenting path has been found.")
-
     # Update the dual variables
     for i in SR:
         if i == cur_row:
