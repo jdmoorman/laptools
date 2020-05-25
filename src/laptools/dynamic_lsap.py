@@ -158,6 +158,13 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
 
+    # If the freed up column does not contribute to lowering the costs of any
+    # other rows, simply return the current assignments.
+    freed_col = col4row[row_removed]
+    freed_col_costs = cost_matrix[:, freed_col]
+    if np.all(freed_col_costs >= cost_matrix[np.arange(n_rows), col4row]):
+        return row4col, col4row, u, v
+
     # Update the cost matrix to reflect the row removal.
     # Create a copy of the cost matrix and update all costs associated with
     # row_removed to be zero. We don't modify the original cost values.
@@ -190,6 +197,8 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     v[col4row] = sub_v
     col4row[:] = col4row[sub_col4row]
 
+    return row4col, col4row, u, v
+
 
 def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v):
     """Solve the sub linear sum assignment problem with one column removed.
@@ -218,7 +227,7 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     # If the removed column is resigned to nothing
     # No need to reassign anything
     if row_freed == -1:
-        return
+        return row4col, col4row, u, v
 
     cost_matrix = np.array(cost_matrix)
     cost_matrix = cost_matrix.astype(np.double)
@@ -238,6 +247,8 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
 
     # Perform another augmenting step
     augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
+
+    return row4col, col4row, u, v
 
 
 def linear_sum_assignment(cost_matrix, maximize=False):
