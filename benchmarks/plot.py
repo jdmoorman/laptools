@@ -12,7 +12,7 @@ def get_solver_from_bench(bench):
 
         "problem_size solver_name"
     """
-    _, solver = bench.get_name().split(" ")
+    _, solver = bench.get_name().split("-")
     return solver
 
 
@@ -23,7 +23,7 @@ def get_size_from_bench(bench):
 
         "problem_size solver_name"
     """
-    size, _ = bench.get_name().split(" ")
+    size, _ = bench.get_name().split("-")
     return int(size)
 
 

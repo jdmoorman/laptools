@@ -23,7 +23,7 @@ def time_func(inner_loops, solver, shape):
 
 
 def get_bench_name(size, solver_name):
-    return "{} {}".format(size, solver_name)
+    return "{}-{}".format(size, solver_name)
 
 
 def main():
