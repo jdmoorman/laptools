@@ -1,3 +1,5 @@
+import argparse
+
 import numpy as np
 import pyperf
 
@@ -26,10 +28,30 @@ def get_bench_name(size, solver_name):
     return "{}-{}".format(size, solver_name)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--min-size-pow",
+        type=int,
+        metavar="POW",
+        default=1,
+        help="Smallest test matrix will be size 2^POW by 2^POW.",
+    )
+    parser.add_argument(
+        "--max-size-pow",
+        type=int,
+        metavar="POW",
+        default=2,
+        help="Largest test matrix will be size 2^POW by 2^POW.",
+    )
+    return parser.parse_known_args()[0]
+
+
 def main():
+    args = parse_args()
     runner = pyperf.Runner()
     solvers = get_solvers()
-    sizes = 2 ** np.arange(3, 11)
+    sizes = 2 ** np.arange(args.min_size_pow, args.max_size_pow + 1)
     for size in sizes:
         for solver_name, solver_func in solvers.items():
             bench_name = get_bench_name(size, solver_name)
