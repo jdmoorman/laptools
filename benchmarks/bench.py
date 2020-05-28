@@ -14,10 +14,10 @@ def get_solvers():
     }
 
 
-def time_func(inner_loops, solver, shape):
+def time_func(n_inner_loops, solver, shape):
     cost_matrix = np.random.random(shape)
     t0 = pyperf.perf_counter()
-    for i in range(inner_loops):
+    for i in range(n_inner_loops):
         solver(cost_matrix)
     return pyperf.perf_counter() - t0
 
