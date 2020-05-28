@@ -1,6 +1,12 @@
+"""
+   isort:skip_file
+"""
+
+import numba
 import numpy as np
 
 
+@numba.njit(parallel=True)
 def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     """Find the shortest augmenting path for the selected row. Update the dual
        variables. Augment the previous solution.
