@@ -95,9 +95,9 @@ def test_linear_sum_assignment_input_validation():
     assert_raises(ValueError, linear_sum_assignment, eye)
 
     # Note that solve_lsap requires that num_rows cannot exceed num_cols
-    cost_matrix = np.array([[0     , np.Inf, np.Inf],
-                            [np.Inf,      0, np.Inf],
-                            [np.Inf, np.Inf,      0],
+    cost_matrix = np.array([[0     , np.inf, np.inf],
+                            [np.inf,      0, np.inf],
+                            [np.inf, np.inf,      0],
                             [0     ,      0,      0]])
     assert_raises(ValueError, solve_lsap, cost_matrix)
 

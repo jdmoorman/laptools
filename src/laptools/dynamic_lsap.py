@@ -129,7 +129,9 @@ def solve_lsap(cost_matrix):
     return row4col, col4row, u, v
 
 
-def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v):
+def solve_lsap_with_removed_row(
+    cost_matrix, row_removed, row4col, col4row, u, v, modify_val=True
+):
     """Solve the sub linear sum assignment problem with one row removed.
 
     Note: the removed row will still be assigned to a column.
@@ -150,9 +152,15 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
         The dual cost vector for rows.
     v : 1darray
         The dual cost vector for columns.
+    modify_val : bool, optional
+        A flag that indicates whether variables are modified in place.
     """
     cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
+
+    # Copy the variables if they are not modified in place.
+    if not modify_val:
+        row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
 
     # If the freed up column does not contribute to lowering the costs of any
     # other rows, simply return the current assignments.
@@ -196,7 +204,9 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     return row4col, col4row, u, v
 
 
-def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v):
+def solve_lsap_with_removed_col(
+    cost_matrix, col_removed, row4col, col4row, u, v, modify_val=True
+):
     """Solve the sub linear sum assignment problem with one column removed.
 
     TODO: Add tests for this function.
@@ -228,14 +238,16 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     cost_matrix = np.array(cost_matrix)
     cost_matrix = cost_matrix.astype(np.double)
 
+    # Copy the variables if they are not modified in place.
+    if not modify_val:
+        row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
+
     # Update the cost matrix to reflect the column removal.
     # Create a copy of the cost matrix and update all costs associated with
     # col_removed to be infinity. We don't modify the original cost values.
     # Note: need to make sure that cost_matrix has dtype float.
     cost_matrix_copy = cost_matrix.copy()
     cost_matrix_copy[:, col_removed] = np.inf
-
-    # TODO: do we need to update the dual variables?
 
     # Removed the assignment associated with the removed column.
     col4row[row_freed] = -1
