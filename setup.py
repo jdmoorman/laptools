@@ -28,7 +28,7 @@ dev_requirements = [
 
 interactive_requirements = ["altair", "jupyterlab", "matplotlib"]
 
-requirements = ["numpy", "scipy"]
+requirements = ["numpy", "scipy", "numba"]
 
 extra_requirements = {
     "test": test_requirements,
