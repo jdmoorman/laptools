@@ -28,7 +28,7 @@ def get_bench_name(size, solver_name):
     return "{}-{}".format(size, solver_name)
 
 
-def parse_args():
+def parse_args(benchopts):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--min-size-pow",
@@ -44,12 +44,19 @@ def parse_args():
         default=2,
         help="Largest test matrix will be size 2^POW by 2^POW.",
     )
-    return parser.parse_known_args()[0]
+    return parser.parse_args(benchopts)
+
+
+def add_cmdline_args(cmd, args):
+    cmd.append("--")
+    cmd.extend(args.benchopts)
 
 
 def main():
-    args = parse_args()
-    runner = pyperf.Runner()
+    runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
+    runner.argparser.add_argument("benchopts", nargs="*")
+    args = parse_args(runner.parse_args().benchopts)
+
     solvers = get_solvers()
     sizes = 2 ** np.arange(args.min_size_pow, args.max_size_pow + 1)
     for size in sizes:
