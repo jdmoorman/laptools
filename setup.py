@@ -8,16 +8,36 @@ from setuptools import find_packages, setup
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
-test_requirements = ["codecov", "pytest", "pytest-cov", "pytest-raises"]
+test_requirements = [
+    "codecov",
+    "pytest",
+    "pytest-cov",
+]
 
-docs_requirements = ["sphinx==1.8.5"]
+docs_requirements = [
+    "sphinx==1.8.5",
+]
 
-setup_requirements = ["pytest-runner"]
+setup_requirements = [
+    "pytest-runner",
+]
+
+perf_requirements = [
+    "pyperf",
+    "matplotlib",
+    "numpy",
+    "scipy",
+    "munkres",
+    "lap",
+    "lapsolver",
+    "lapjv",
+]
 
 dev_requirements = [
     *test_requirements,
     *docs_requirements,
     *setup_requirements,
+    *perf_requirements,
     "pre-commit",
     "bumpversion>=0.5.3",
     "ipython>=7.5.0",
@@ -26,23 +46,25 @@ dev_requirements = [
     "wheel>=0.33.1",
 ]
 
-interactive_requirements = ["altair", "jupyterlab", "matplotlib"]
-
-requirements = ["numpy", "scipy", "numba"]
+requirements = [
+    "numpy",
+    "scipy",
+    "numba",
+]
 
 extra_requirements = {
     "test": test_requirements,
     "docs": docs_requirements,
     "setup": setup_requirements,
     "dev": dev_requirements,
-    "interactive": interactive_requirements,
+    "perf": perf_requirements,
     "all": [
         *requirements,
         *test_requirements,
         *docs_requirements,
         *setup_requirements,
         *dev_requirements,
-        *interactive_requirements,
+        *perf_requirements,
     ],
 }
 
@@ -63,7 +85,6 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     description="Fast constrained linear assignment problem (CLAP) solvers",
-    entry_points={"console_scripts": ["my_example=laptools.bin.my_example:main"]},
     install_requires=requirements,
     license="MIT License",
     long_description=readme,
@@ -81,6 +102,6 @@ setup(
     url="https://github.com/jdmoorman/laptools",
     # Do not edit this string manually, always use bumpversion
     # Details in CONTRIBUTING.rst
-    version="0.1.7",
+    version="0.1.8",
     zip_safe=False,
 )
