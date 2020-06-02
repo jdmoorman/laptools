@@ -1,6 +1,12 @@
+"""
+   isort:skip_file
+"""
+
+import numba
 import numpy as np
 
 
+@numba.njit(parallel=True)
 def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     """Find the shortest augmenting path for the selected row. Update the dual
        variables. Augment the previous solution.
@@ -70,10 +76,6 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
         # Remove the visited column from remaining
         remaining.remove(idx_min)
 
-    # If no augmenting path has been found
-    if sink < 0:
-        raise ValueError("No augmenting path has been found.")
-
     # Update the dual variables
     for i in SR:
         if i == cur_row:
@@ -133,7 +135,9 @@ def solve_lsap(cost_matrix):
     return row4col, col4row, u, v
 
 
-def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v):
+def solve_lsap_with_removed_row(
+    cost_matrix, row_removed, row4col, col4row, u, v, modify_val=True
+):
     """Solve the sub linear sum assignment problem with one row removed.
 
     Note: the removed row will still be assigned to a column.
@@ -154,9 +158,22 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
         The dual cost vector for rows.
     v : 1darray
         The dual cost vector for columns.
+    modify_val : bool, optional
+        A flag that indicates whether variables are modified in place.
     """
     cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
+
+    # Copy the variables if they are not modified in place.
+    if not modify_val:
+        row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
+
+    # If the freed up column does not contribute to lowering the costs of any
+    # other rows, simply return the current assignments.
+    freed_col = col4row[row_removed]
+    freed_col_costs = cost_matrix[:, freed_col]
+    if np.all(freed_col_costs >= cost_matrix[np.arange(n_rows), col4row]):
+        return row4col, col4row, u, v
 
     # Update the cost matrix to reflect the row removal.
     # Create a copy of the cost matrix and update all costs associated with
@@ -190,8 +207,12 @@ def solve_lsap_with_removed_row(cost_matrix, row_removed, row4col, col4row, u, v
     v[col4row] = sub_v
     col4row[:] = col4row[sub_col4row]
 
+    return row4col, col4row, u, v
 
-def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v):
+
+def solve_lsap_with_removed_col(
+    cost_matrix, col_removed, row4col, col4row, u, v, modify_val=True
+):
     """Solve the sub linear sum assignment problem with one column removed.
 
     TODO: Add tests for this function.
@@ -218,10 +239,14 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     # If the removed column is resigned to nothing
     # No need to reassign anything
     if row_freed == -1:
-        return
+        return row4col, col4row, u, v
 
     cost_matrix = np.array(cost_matrix)
     cost_matrix = cost_matrix.astype(np.double)
+
+    # Copy the variables if they are not modified in place.
+    if not modify_val:
+        row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
 
     # Update the cost matrix to reflect the column removal.
     # Create a copy of the cost matrix and update all costs associated with
@@ -230,14 +255,14 @@ def solve_lsap_with_removed_col(cost_matrix, col_removed, row4col, col4row, u, v
     cost_matrix_copy = cost_matrix.copy()
     cost_matrix_copy[:, col_removed] = np.inf
 
-    # TODO: do we need to update the dual variables?
-
     # Removed the assignment associated with the removed column.
     col4row[row_freed] = -1
     row4col[col_removed] = -1
 
     # Perform another augmenting step
     augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
+
+    return row4col, col4row, u, v
 
 
 def linear_sum_assignment(cost_matrix, maximize=False):

@@ -8,7 +8,7 @@ from pytest import raises as assert_raises
 from scipy.optimize import linear_sum_assignment as lap
 from scipy.sparse.sputils import matrix
 
-from laptools.dynamic_lsap import linear_sum_assignment
+from laptools.dynamic_lsap import linear_sum_assignment, solve_lsap
 
 
 # fmt: off
@@ -72,11 +72,11 @@ def test_linear_sum_assignment_input_validation():
     # Since the input should be a 2D array.
     assert_raises(ValueError, linear_sum_assignment, [1, 2, 3])
 
-    C = [[1, 2, 3], [4, 5, 6]]
-    assert_array_equal(linear_sum_assignment(C),
-                       linear_sum_assignment(np.asarray(C)))
-    assert_array_equal(linear_sum_assignment(C),
-                       linear_sum_assignment(matrix(C)))
+    cost_matrix = [[1, 2, 3], [4, 5, 6]]
+    assert_array_equal(linear_sum_assignment(cost_matrix),
+                       linear_sum_assignment(np.asarray(cost_matrix)))
+    assert_array_equal(linear_sum_assignment(cost_matrix),
+                       linear_sum_assignment(matrix(cost_matrix)))
 
     eye = np.identity(3)
     assert_array_equal(linear_sum_assignment(eye.astype(np.bool)),
@@ -93,6 +93,13 @@ def test_linear_sum_assignment_input_validation():
     eye = np.identity(3)
     eye[:, 0] = np.inf
     assert_raises(ValueError, linear_sum_assignment, eye)
+
+    # Note that solve_lsap requires that num_rows cannot exceed num_cols
+    cost_matrix = np.array([[0     , np.inf, np.inf],
+                            [np.inf,      0, np.inf],
+                            [np.inf, np.inf,      0],
+                            [0     ,      0,      0]])
+    assert_raises(ValueError, solve_lsap, cost_matrix)
 
 # fmt: on
 
