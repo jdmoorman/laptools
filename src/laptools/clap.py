@@ -60,6 +60,8 @@ def costs(cost_matrix):
         assigned to column j.
     """
     cost_matrix = np.array(cost_matrix)
+    cost_matrix = cost_matrix.astype(np.double)
+
     n_rows, n_cols = cost_matrix.shape
     if n_rows > n_cols:
         return costs(cost_matrix.T).T
@@ -81,9 +83,12 @@ def costs(cost_matrix):
 
     # When a row has its column stolen by a constraint, these are the columns
     # that might come into play when we are forced to resolve the assignment.
-    unused = np.setdiff1d(np.arange(n_cols), lsap_col_idxs)
-    first_unused = np.argmin(cost_matrix[:, unused], axis=1)
-    potential_cols = np.union1d(lsap_col_idxs, unused[first_unused])
+    if n_rows < n_cols:
+        unused = np.setdiff1d(np.arange(n_cols), lsap_col_idxs)
+        first_unused = np.argmin(cost_matrix[:, unused], axis=1)
+        potential_cols = np.union1d(lsap_col_idxs, unused[first_unused])
+    else:
+        potential_cols = np.arange(n_cols)
 
     # When we add the constraint assigning row i to column j, lsap_col_idxs[i]
     # is freed up. If lsap_col_idxs[i] cannot improve on the cost of one of the
