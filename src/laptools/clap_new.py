@@ -71,6 +71,8 @@ def costs(cost_matrix):
         assigned to column j.
     """
     cost_matrix = np.array(cost_matrix)
+    cost_matrix = cost_matrix.astype(np.double)
+
     n_rows, n_cols = cost_matrix.shape
     if n_rows > n_cols:
         return costs(cost_matrix.T).T
@@ -85,8 +87,22 @@ def costs(cost_matrix):
     lsap_costs = cost_matrix[row_idxs, col4row]
     lsap_total_cost = lsap_costs.sum()
 
-    # Each row is column indexes ordered by their costs in that row.
-    sorted_costs_ind = np.argsort(cost_matrix, axis=1)
+    # sorted_costs_ind = np.argsort(cost_matrix, axis=1)
+
+    # Find the two minimum-cost columns for each row
+    best_col_idxs = np.argmin(cost_matrix, axis=1)
+    _cost_matrix = cost_matrix.copy()
+    _cost_matrix[row_idxs, best_col_idxs] = np.inf
+    second_best_col_idxs = np.argmin(_cost_matrix, axis=1)
+
+    # When a row has its column stolen by a constraint, these are the columns
+    # that might come into play when we are forced to resolve the assignment.
+    if n_rows < n_cols:
+        unused = np.setdiff1d(np.arange(n_cols), col4row)
+        first_unused = np.argmin(cost_matrix[:, unused], axis=1)
+        potential_cols = np.union1d(col4row, unused[first_unused])
+    else:
+        potential_cols = np.arange(n_cols)
 
     # When we add the constraint assigning row i to column j, lsap_col_idxs[i]
     # is freed up. If lsap_col_idxs[i] cannot improve on the cost of one of the
@@ -137,11 +153,11 @@ def costs(cost_matrix):
 
             # Row i steals column stolen_j from other_i because of constraint.
             new_col4row[i] = stolen_j
-            new_col4row[other_i] = -1
+            # new_col4row[other_i] = -1
 
             # Row other_i must find a new column. What is its next best option?
-            best_j = sorted_costs_ind[other_i, 0]
-            second_best_j = sorted_costs_ind[other_i, 1]
+            best_j = best_col_idxs[other_i]
+            second_best_j = second_best_col_idxs[other_i]
             next_best_j = best_j if (best_j != stolen_j) else second_best_j
 
             # Is the next best option available? If so, use it. Otherwise,
@@ -152,20 +168,42 @@ def costs(cost_matrix):
             else:
                 # Otherwise, solve the lsap with stolen_j removed
                 # TODO: we might want to bring back potential_cols here.
+                sub_sub_cost_matrix = sub_cost_matrix[:, potential_cols]
+                sub_j = np.argwhere(potential_cols == stolen_j)[0][0]
+                sub_new_col4row = new_col4row[sub_ind]
+                sub_new_col4row = np.where(
+                    sub_new_col4row.reshape(sub_new_col4row.size, 1) == potential_cols
+                )[1]
+
                 _, new_new_col4row, _, _ = solve_lsap_with_removed_col(
-                    sub_cost_matrix,
-                    stolen_j,
-                    sub_row4col,
-                    new_col4row[sub_ind],
+                    sub_sub_cost_matrix,
+                    sub_j,
+                    sub_row4col[potential_cols],
+                    sub_new_col4row,
                     new_u[sub_ind],  # dual variable associated with rows
-                    new_v,  # dual variable associated with cols
+                    new_v[potential_cols],  # dual variable associated with cols
                     modify_val=False,
                 )
 
                 total_costs[i, stolen_j] = (
                     cost_matrix[i, stolen_j]
-                    + cost_matrix[sub_ind, new_new_col4row].sum()
+                    + sub_sub_cost_matrix[np.arange(n_rows - 1), new_new_col4row].sum()
                 )
+
+                # _, new_new_col4row, _, _ = solve_lsap_with_removed_col(
+                #     sub_cost_matrix,
+                #     stolen_j,
+                #     sub_row4col,
+                #     new_col4row[sub_ind],
+                #     new_u[sub_ind],  # dual variable associated with rows
+                #     new_v,           # dual variable associated with cols
+                #     modify_val=False,
+                # )
+                #
+                # total_costs[i, stolen_j] = (
+                #     cost_matrix[i, stolen_j]
+                #     + cost_matrix[sub_ind, new_new_col4row].sum()
+                # )
 
             # Give other_i its column back in preparation for the next round.
             new_col4row[other_i] = stolen_j
