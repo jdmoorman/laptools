@@ -68,20 +68,25 @@ cost_matrix_6 = np.array([[3, 8, 1, 3, 8],
                           [6, 3, 8, 2, 0],
                           [2, 9, 6, 6, 3]])
 
-global_cost_6 = cost_matrix_6.copy()
+global_cost_6 = np.array([[13, 20, 10, 10, 17],
+                          [15, 10, 18, 18, 21],
+                          [12, 15, 10, 11, 10],
+                          [17, 16, 18, 10, 10],
+                          [10, 19, 15, 13, 12]])
 
-
-def one_hot(idx, length):
-    one_hot = np.zeros(length, dtype=np.bool)
-    one_hot[idx] = True
-    return one_hot
-
-
-for i in range(5):
-    for j in range(5):
-        sub_cost_matrix = cost_matrix_6[~one_hot(i, 5), :][:, ~one_hot(j, 5)]
-        sub_total_cost = sub_cost_matrix[lap(sub_cost_matrix)].sum()
-        global_cost_6[i, j] += sub_total_cost
+# global_cost_6 = cost_matrix_6.copy()
+#
+# def one_hot(idx, length):
+#     one_hot = np.zeros(length, dtype=np.bool)
+#     one_hot[idx] = True
+#     return one_hot
+#
+#
+# for i in range(5):
+#     for j in range(5):
+#         sub_cost_matrix = cost_matrix_6[~one_hot(i, 5), :][:, ~one_hot(j, 5)]
+#         sub_total_cost = sub_cost_matrix[lap(sub_cost_matrix)].sum()
+#         global_cost_6[i, j] += sub_total_cost
 
 # fmt: on
 
