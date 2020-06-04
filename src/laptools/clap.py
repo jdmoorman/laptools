@@ -140,9 +140,11 @@ def costs(cost_matrix):
             col_idxs[other_i] = -1
 
             # Row other_i must find a new column. What is its next best option?
-            best_j = best_col_idxs[other_i]
-            second_best_j = second_best_col_idxs[other_i]
-            third_best_j = third_best_col_idxs[other_i]
+            best_j, second_best_j, third_best_j = (
+                best_col_idxs[other_i],
+                second_best_col_idxs[other_i],
+                third_best_col_idxs[other_i],
+            )
 
             # TODO: Problem might occur if we have two j's that are both next best.
             # However, one is not in col_idxs and the other is in col_idxs.
