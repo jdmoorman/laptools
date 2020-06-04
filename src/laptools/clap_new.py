@@ -2,11 +2,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment as lap
 
 from ._util import one_hot
-from .dynamic_lsap import (
-    solve_lsap,
-    solve_lsap_with_removed_col,
-    solve_lsap_with_removed_row,
-)
+from .lap import solve, solve_lsap_with_removed_col, solve_lsap_with_removed_row
 
 
 def cost(i, j, cost_matrix):
@@ -81,7 +77,7 @@ def costs(cost_matrix):
     # Since there are at least as many columns as rows, row_idxs should
     # be identical to np.arange(n_rows). We depend on this.
     row_idxs = np.arange(n_rows)
-    row4col, col4row, u, v = solve_lsap(cost_matrix)
+    row4col, col4row, u, v = solve(cost_matrix)
 
     # Column vector of costs of each assignment in the lsap solution.
     lsap_costs = cost_matrix[row_idxs, col4row]

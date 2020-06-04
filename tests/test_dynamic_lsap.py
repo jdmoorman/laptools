@@ -8,8 +8,8 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment as lap
 
 from laptools._util import one_hot
-from laptools.dynamic_lsap import (
-    solve_lsap,
+from laptools.lap import (
+    solve,
     solve_lsap_with_removed_col,
     solve_lsap_with_removed_row,
 )
@@ -33,7 +33,7 @@ def test_solve_lsap_with_removed_row():
         sub_row_idx_1, sub_col_idx_1 = lap(sub_cost_matrix)
 
         # Solve the problem with dynamic algorithm
-        row4col, col4row, u, v = solve_lsap(cost_matrix)
+        row4col, col4row, u, v = solve(cost_matrix)
         assert (
             np.array_equal(col_idx_1, col4row)
             or cost_matrix[row_idx_1, col_idx_1].sum()
@@ -74,7 +74,7 @@ def test_solve_lsap_with_removed_col():
                 sub_col_idx_1[i] += 1
 
         # Solve the problem with dynamic algorithm
-        row4col, col4row, u, v = solve_lsap(cost_matrix)
+        row4col, col4row, u, v = solve(cost_matrix)
         assert (
             np.array_equal(col_idx_1, col4row)
             or cost_matrix[row_idx_1, col_idx_1].sum()
