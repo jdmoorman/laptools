@@ -80,6 +80,8 @@ def costs(cost_matrix):
     _cost_matrix = cost_matrix.copy()
     _cost_matrix[row_idxs, best_col_idxs] = np.inf
     second_best_col_idxs = np.argmin(_cost_matrix, axis=1)
+    _cost_matrix[row_idxs, second_best_col_idxs] = np.inf
+    third_best_col_idxs = np.argmin(_cost_matrix, axis=1)
 
     # When a row has its column stolen by a constraint, these are the columns
     # that might come into play when we are forced to resolve the assignment.
@@ -140,19 +142,49 @@ def costs(cost_matrix):
             # Row other_i must find a new column. What is its next best option?
             best_j = best_col_idxs[other_i]
             second_best_j = second_best_col_idxs[other_i]
+            third_best_j = third_best_col_idxs[other_i]
 
-            next_best_j = best_j if (best_j != stolen_j) else second_best_j
+            # TODO: Problem might occur if we have two j's that are both next best.
+            # However, one is not in col_idxs and the other is in col_idxs.
+            # In this case, choosing the one not in col_idxs does not necessarily
+            # give us the optimal assignment.
+            # TODO: make the following if-else prettier.
 
-            # Is the next best option available? If so, use it. Otherwise,
-            # solve the constrained lsap from scratch.
-            if next_best_j not in col_idxs:
-                col_idxs[other_i] = next_best_j
+            if (
+                best_j != stolen_j
+                and best_j not in col_idxs
+                and (
+                    cost_matrix[other_i, best_j] != cost_matrix[other_i, second_best_j]
+                    or second_best_j not in col_idxs
+                )
+            ):
+                col_idxs[other_i] = best_j
+                total_costs[i, stolen_j] = cost_matrix[row_idxs, col_idxs].sum()
+            elif second_best_j not in col_idxs and (
+                cost_matrix[other_i, second_best_j]
+                != cost_matrix[other_i, third_best_j]
+                or third_best_j not in col_idxs
+            ):
+                col_idxs[other_i] = second_best_j
                 total_costs[i, stolen_j] = cost_matrix[row_idxs, col_idxs].sum()
             else:
                 sub_cost_matrix = cost_matrix[:, potential_cols]
                 sub_j = np.argwhere(potential_cols == stolen_j)[0]
                 total_cost = cost(i, sub_j, sub_cost_matrix)
                 total_costs[i, stolen_j] = total_cost
+
+            # next_best_j = best_j if (best_j != stolen_j) else second_best_j
+
+            # Is the next best option available? If so, use it. Otherwise,
+            # solve the constrained lsap from scratch.
+            # if next_best_j not in col_idxs:
+            #     col_idxs[other_i] = next_best_j
+            #     total_costs[i, stolen_j] = cost_matrix[row_idxs, col_idxs].sum()
+            # else:
+            #     sub_cost_matrix = cost_matrix[:, potential_cols]
+            #     sub_j = np.argwhere(potential_cols == stolen_j)[0]
+            #     total_cost = cost(i, sub_j, sub_cost_matrix)
+            #     total_costs[i, stolen_j] = total_cost
 
             # Give other_i its column back in preparation for the next round.
             col_idxs[other_i] = stolen_j
