@@ -36,7 +36,7 @@ def cost(i, j, cost_matrix):
         sub_row_ind, sub_col_ind = lap(sub_cost_matrix)
     except ValueError as e:
         if str(e) == "cost matrix is infeasible":
-            return float("inf")
+            return np.inf
         else:
             raise e
 
@@ -76,7 +76,13 @@ def costs(cost_matrix):
     # Find the best lsap assignment from rows to columns without constrains.
     # Since there are at least as many columns as rows, row_idxs should
     # be identical to np.arange(n_rows). We depend on this.
-    row_idxs, lsap_col_idxs = lap(cost_matrix)
+    try:
+        row_idxs, lsap_col_idxs = lap(cost_matrix)
+    except ValueError as e:
+        if str(e) == "cost matrix is infeasible":
+            return np.full((n_rows, n_cols), np.inf)
+        else:
+            raise e
 
     # Column vector of costs of each assignment in the lsap solution.
     lsap_costs = cost_matrix[row_idxs, lsap_col_idxs]

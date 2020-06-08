@@ -61,12 +61,12 @@ global_cost_5 = np.array([[6, 5, 6],
                           [6, 7, 5],
                           [8, 11, 11]])
 
-# New test:
-cost_matrix_6 = np.array([[3, 8, 1, 3, 8],
-                          [2, 0, 6, 8, 9],
-                          [6, 7, 5, 8, 5],
-                          [6, 3, 8, 2, 0],
-                          [2, 9, 6, 6, 3]])
+# New tests:
+cost_matrix_6 = [[3, 8, 1, 3, 8],
+                 [2, 0, 6, 8, 9],
+                 [6, 7, 5, 8, 5],
+                 [6, 3, 8, 2, 0],
+                 [2, 9, 6, 6, 3]]
 
 global_cost_6 = np.array([[13, 20, 10, 10, 17],
                           [15, 10, 18, 18, 21],
@@ -74,19 +74,13 @@ global_cost_6 = np.array([[13, 20, 10, 10, 17],
                           [17, 16, 18, 10, 10],
                           [10, 19, 15, 13, 12]])
 
-# global_cost_6 = cost_matrix_6.copy()
-#
-# def one_hot(idx, length):
-#     one_hot = np.zeros(length, dtype=np.bool)
-#     one_hot[idx] = True
-#     return one_hot
-#
-#
-# for i in range(5):
-#     for j in range(5):
-#         sub_cost_matrix = cost_matrix_6[~one_hot(i, 5), :][:, ~one_hot(j, 5)]
-#         sub_total_cost = sub_cost_matrix[lap(sub_cost_matrix)].sum()
-#         global_cost_6[i, j] += sub_total_cost
+cost_matrix_7 = [[4, 1, 3],
+                 [2, np.inf, np.inf],
+                 [3, np.inf, np.inf]]
+
+global_cost_7 = np.array([[np.inf, np.inf, np.inf],
+                          [np.inf, np.inf, np.inf],
+                          [np.inf, np.inf, np.inf]])
 
 # fmt: on
 
@@ -126,6 +120,7 @@ class TestClap:
             (cost_matrix_4, global_cost_4),
             (cost_matrix_5, global_cost_5),
             (cost_matrix_6, global_cost_6),
+            (cost_matrix_7, global_cost_7),
         ],
     )
     def test_clap_costs(self, cost_matrix, expected_global_costs):
