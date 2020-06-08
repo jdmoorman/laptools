@@ -1,8 +1,8 @@
 import numpy as np
-from scipy.optimize import linear_sum_assignment as lap
+from scipy.optimize import linear_sum_assignment
 
+from . import lap
 from ._util import one_hot
-from .lap import solve, solve_lsap_with_removed_col, solve_lsap_with_removed_row
 
 
 def cost(i, j, cost_matrix):
@@ -34,7 +34,7 @@ def cost(i, j, cost_matrix):
     sub_cost_matrix = cost_matrix[~one_hot(i, n_rows), :][:, ~one_hot(j, n_cols)]
 
     # Lsap solution for the submatrix.
-    sub_row_ind, sub_col_ind = lap(sub_cost_matrix)
+    sub_row_ind, sub_col_ind = linear_sum_assignment(sub_cost_matrix)
 
     # Total cost is that of the submatrix lsap plus the cost of the constraint.
     return sub_cost_matrix[sub_row_ind, sub_col_ind].sum() + cost_matrix[i, j]
@@ -77,7 +77,7 @@ def costs(cost_matrix):
     # Since there are at least as many columns as rows, row_idxs should
     # be identical to np.arange(n_rows). We depend on this.
     row_idxs = np.arange(n_rows)
-    row4col, col4row, u, v = solve(cost_matrix)
+    row4col, col4row, u, v = lap.solve(cost_matrix)
 
     # Column vector of costs of each assignment in the lsap solution.
     lsap_costs = cost_matrix[row_idxs, col4row]
@@ -117,7 +117,7 @@ def costs(cost_matrix):
         sub_ind = ~one_hot(i, n_rows)
         sub_cost_matrix = cost_matrix[sub_ind, :]
 
-        new_row4col, new_col4row, new_u, new_v = solve_lsap_with_removed_row(
+        new_row4col, new_col4row, new_u, new_v = lap.solve_lsap_with_removed_row(
             cost_matrix, i, row4col, col4row, u, v, modify_val=False
         )
 
@@ -171,7 +171,7 @@ def costs(cost_matrix):
                     sub_new_col4row.reshape(sub_new_col4row.size, 1) == potential_cols
                 )[1]
 
-                _, new_new_col4row, _, _ = solve_lsap_with_removed_col(
+                _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
                     sub_sub_cost_matrix,
                     sub_j,
                     sub_row4col[potential_cols],
@@ -186,7 +186,7 @@ def costs(cost_matrix):
                     + sub_sub_cost_matrix[np.arange(n_rows - 1), new_new_col4row].sum()
                 )
 
-                # _, new_new_col4row, _, _ = solve_lsap_with_removed_col(
+                # _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
                 #     sub_cost_matrix,
                 #     stolen_j,
                 #     sub_row4col,
