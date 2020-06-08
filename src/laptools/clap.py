@@ -31,7 +31,14 @@ def cost(i, j, cost_matrix):
     sub_cost_matrix = cost_matrix[~one_hot(i, n_rows), :][:, ~one_hot(j, n_cols)]
 
     # Lsap solution for the submatrix.
-    sub_row_ind, sub_col_ind = lap(sub_cost_matrix)
+    # Lsap solution for the submatrix.
+    try:
+        sub_row_ind, sub_col_ind = lap(sub_cost_matrix)
+    except ValueError as e:
+        if str(e) == "cost matrix is infeasible":
+            return float("inf")
+        else:
+            raise e
 
     # Total cost is that of the submatrix lsap plus the cost of the constraint.
     return sub_cost_matrix[sub_row_ind, sub_col_ind].sum() + cost_matrix[i, j]
