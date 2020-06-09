@@ -5,14 +5,10 @@
 import random
 
 import numpy as np
-from scipy.optimize import linear_sum_assignment as lap
+from scipy.optimize import linear_sum_assignment
 
 from laptools._util import one_hot
-from laptools.dynamic_lsap import (
-    solve_lsap,
-    solve_lsap_with_removed_col,
-    solve_lsap_with_removed_row,
-)
+from laptools import lap
 
 
 def test_solve_lsap_with_removed_row():
@@ -26,21 +22,23 @@ def test_solve_lsap_with_removed_row():
         # lead to existence of multiple solutions.
         cost_matrix = np.random.randint(10, size=(num_rows, num_cols))
         removed_row = random.randint(0, num_rows - 1)
-        row_idx_1, col_idx_1 = lap(cost_matrix)
+        row_idx_1, col_idx_1 = linear_sum_assignment(cost_matrix)
 
         # Get the submatrix with the removed row
         sub_cost_matrix = cost_matrix[~one_hot(removed_row, num_rows), :]
-        sub_row_idx_1, sub_col_idx_1 = lap(sub_cost_matrix)
+        sub_row_idx_1, sub_col_idx_1 = linear_sum_assignment(sub_cost_matrix)
 
         # Solve the problem with dynamic algorithm
-        row4col, col4row, u, v = solve_lsap(cost_matrix)
+        row4col, col4row, u, v = lap._solve(cost_matrix)
         assert (
             np.array_equal(col_idx_1, col4row)
             or cost_matrix[row_idx_1, col_idx_1].sum()
             == cost_matrix[row_idx_1, col4row].sum()
         )
 
-        solve_lsap_with_removed_row(cost_matrix, removed_row, row4col, col4row, u, v)
+        lap.solve_lsap_with_removed_row(
+            cost_matrix, removed_row, row4col, col4row, u, v
+        )
         assert (
             np.array_equal(sub_col_idx_1, col4row[~one_hot(removed_row, num_rows)])
             or sub_cost_matrix[sub_row_idx_1, sub_col_idx_1].sum()
@@ -59,14 +57,14 @@ def test_solve_lsap_with_removed_col():
 
     for i in range(num_rounds):
         cost_matrix = np.random.randint(10, size=(num_rows, num_cols))
-        row_idx_1, col_idx_1 = lap(cost_matrix)
+        row_idx_1, col_idx_1 = linear_sum_assignment(cost_matrix)
         # Note that here we specifically pick a column that appears in the
         # previous optimal assignment.
         removed_col = random.choice(col_idx_1)
 
         # Get the submatrix with the removed col
         sub_cost_matrix = cost_matrix[:, ~one_hot(removed_col, num_cols)]
-        sub_row_idx_1, sub_col_idx_1 = lap(sub_cost_matrix)
+        sub_row_idx_1, sub_col_idx_1 = linear_sum_assignment(sub_cost_matrix)
         sub_cost_matrix_sum = sub_cost_matrix[sub_row_idx_1, sub_col_idx_1].sum()
         for i in range(len(sub_col_idx_1)):
             if sub_col_idx_1[i] >= removed_col:
@@ -74,14 +72,16 @@ def test_solve_lsap_with_removed_col():
                 sub_col_idx_1[i] += 1
 
         # Solve the problem with dynamic algorithm
-        row4col, col4row, u, v = solve_lsap(cost_matrix)
+        row4col, col4row, u, v = lap._solve(cost_matrix)
         assert (
             np.array_equal(col_idx_1, col4row)
             or cost_matrix[row_idx_1, col_idx_1].sum()
             == cost_matrix[row_idx_1, col4row].sum()
         )
 
-        solve_lsap_with_removed_col(cost_matrix, removed_col, row4col, col4row, u, v)
+        lap.solve_lsap_with_removed_col(
+            cost_matrix, removed_col, row4col, col4row, u, v
+        )
         assert (
             np.array_equal(sub_col_idx_1, col4row)
             or sub_cost_matrix_sum == cost_matrix[row_idx_1, col4row].sum()

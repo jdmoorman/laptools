@@ -6,7 +6,7 @@ import numba
 import numpy as np
 
 
-@numba.njit(parallel=True)
+@numba.njit()
 def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     """Find the shortest augmenting path for the selected row. Update the dual
        variables. Augment the previous solution.
@@ -96,7 +96,7 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
             break
 
 
-def solve_lsap(cost_matrix):
+def _solve(cost_matrix):
     """Solve the rectangular linear sum assignment problem via an augmenting
        path approach. Note that the cost matrix can be rectangular, but we
        require that its number of rows cannot exceed its number of columns.
@@ -265,9 +265,9 @@ def solve_lsap_with_removed_col(
     return row4col, col4row, u, v
 
 
-def linear_sum_assignment(cost_matrix, maximize=False):
+def solve(cost_matrix, maximize=False):
     """Solve the linear sum assignment based on the cost matrix. The return
-       value is the same as in scipy.
+       value is the same as scipy.optimize.linear_sum_assignment.
 
     Parameters
     ----------
@@ -312,7 +312,7 @@ def linear_sum_assignment(cost_matrix, maximize=False):
     # If the cost_matrix has more rows than columns
     if cost_matrix.shape[1] < cost_matrix.shape[0]:
         # Here, col4row holds the rows in cost_matrix that are in the assignment
-        _, col4row, _, _ = solve_lsap(cost_matrix.T)
+        _, col4row, _, _ = _solve(cost_matrix.T)
 
         # Sort the row indexes in the assignment
         idx_sorted = np.argsort(col4row)
@@ -320,5 +320,5 @@ def linear_sum_assignment(cost_matrix, maximize=False):
         return (col4row[idx_sorted], a[idx_sorted])
     # If the cost_matrix has more columns than rows
     else:
-        _, col4row, _, _ = solve_lsap(cost_matrix)
+        _, col4row, _, _ = _solve(cost_matrix)
         return (a, col4row)

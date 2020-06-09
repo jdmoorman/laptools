@@ -7,7 +7,7 @@ import pyperf
 def get_solvers():
     from lapjv import lapjv as lapjv_lap
     from scipy.optimize import linear_sum_assignment as scipy_lap
-    from laptools.dynamic_lsap import linear_sum_assignment as laptools_lap
+    from laptools.lap import solve as laptools_lap
 
     return {
         "scipy": scipy_lap,
