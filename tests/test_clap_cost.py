@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from scipy.optimize import linear_sum_assignment as lap
 
 from laptools import clap
 

@@ -96,7 +96,7 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
             break
 
 
-def solve(cost_matrix, return_duals=True):
+def _solve(cost_matrix):
     """Solve the rectangular linear sum assignment problem via an augmenting
        path approach. Note that the cost matrix can be rectangular, but we
        require that its number of rows cannot exceed its number of columns.
@@ -105,8 +105,6 @@ def solve(cost_matrix, return_duals=True):
     ----------
     cost_matrix : 2darray
          A matrix of costs. The number of rows cannot exceed the number of columns.
-    return_duals : bool, optional
-         Return dual cost vectors (True) in addition to assignments.
 
     Returns
     -------
@@ -134,11 +132,7 @@ def solve(cost_matrix, return_duals=True):
     for cur_row in range(n_rows):
         augment(cost_matrix, cur_row, row4col, col4row, u, v)
 
-    if return_duals:
-        return row4col, col4row, u, v
-    else:
-        # TODO: Figure out if this return value is appropriate.
-        return row4col, col4row
+    return row4col, col4row, u, v
 
 
 def solve_lsap_with_removed_row(
@@ -271,7 +265,7 @@ def solve_lsap_with_removed_col(
     return row4col, col4row, u, v
 
 
-def linear_sum_assignment(cost_matrix, maximize=False):
+def solve(cost_matrix, maximize=False):
     """Solve the linear sum assignment based on the cost matrix. The return
        value is the same as scipy.optimize.linear_sum_assignment.
 
@@ -318,7 +312,7 @@ def linear_sum_assignment(cost_matrix, maximize=False):
     # If the cost_matrix has more rows than columns
     if cost_matrix.shape[1] < cost_matrix.shape[0]:
         # Here, col4row holds the rows in cost_matrix that are in the assignment
-        _, col4row, _, _ = solve(cost_matrix.T)
+        _, col4row, _, _ = _solve(cost_matrix.T)
 
         # Sort the row indexes in the assignment
         idx_sorted = np.argsort(col4row)
@@ -326,5 +320,5 @@ def linear_sum_assignment(cost_matrix, maximize=False):
         return (col4row[idx_sorted], a[idx_sorted])
     # If the cost_matrix has more columns than rows
     else:
-        _, col4row, _, _ = solve(cost_matrix)
+        _, col4row, _, _ = _solve(cost_matrix)
         return (a, col4row)

@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import linear_sum_assignment as lap
+from scipy.optimize import linear_sum_assignment
 
 from ._util import one_hot
 
@@ -33,7 +33,7 @@ def cost(i, j, cost_matrix):
     # Lsap solution for the submatrix.
     # Lsap solution for the submatrix.
     try:
-        sub_row_ind, sub_col_ind = lap(sub_cost_matrix)
+        sub_row_ind, sub_col_ind = linear_sum_assignment(sub_cost_matrix)
     except ValueError as e:
         if str(e) == "cost matrix is infeasible":
             return np.inf
@@ -77,7 +77,7 @@ def costs(cost_matrix):
     # Since there are at least as many columns as rows, row_idxs should
     # be identical to np.arange(n_rows). We depend on this.
     try:
-        row_idxs, lsap_col_idxs = lap(cost_matrix)
+        row_idxs, lsap_col_idxs = linear_sum_assignment(cost_matrix)
     except ValueError as e:
         if str(e) == "cost matrix is infeasible":
             return np.full((n_rows, n_cols), np.inf)
@@ -129,7 +129,7 @@ def costs(cost_matrix):
             # the constraint. When it does conflict, we fix the issue later.
             sub_ind = ~one_hot(i, n_rows)
             sub_cost_matrix = cost_matrix[sub_ind, :][:, lsap_col_idxs]
-            sub_row_ind, sub_col_ind = lap(sub_cost_matrix)
+            sub_row_ind, sub_col_ind = linear_sum_assignment(sub_cost_matrix)
             sub_total_cost = sub_cost_matrix[sub_row_ind, sub_col_ind].sum()
             col_idxs[sub_ind] = lsap_col_idxs[sub_col_ind]
 
