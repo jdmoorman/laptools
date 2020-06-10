@@ -104,12 +104,6 @@ augment(py::array_t<double> cost_matrix,
     // find shortest augmenting path
     int sink = -1;
     while (sink == -1) {
-        py::print("cur_row start", row_idx);
-
-        std::cout << "remaining" << " ";
-        for(auto itr : remaining)
-            std::cout << itr << " ";
-        std::cout << std::endl;
 
         int index = -1;
         double lowest = INFINITY;
@@ -134,21 +128,8 @@ augment(py::array_t<double> cost_matrix,
             }
         }
 
-        std::cout << "path" << " ";
-        for(auto itr : path)
-            std::cout << itr << " ";
-        std::cout << std::endl;
-
-        std::cout << "shortest path costs" << " ";
-        for(auto itr : shortestPathCosts)
-            std::cout << itr << " ";
-        std::cout << std::endl;
-
-        int j = remaining[index];
-
-        py::print("idx and min", j, lowest);
-
         minVal = lowest;
+        int j = remaining[index];
 
         // TODO: raise an exception if minVal is INFINITY
         // if (minVal == INFINITY) { // infeasible cost matrix
@@ -164,34 +145,26 @@ augment(py::array_t<double> cost_matrix,
         SC[j] = true;
         remaining[index] = remaining[--num_remaining];
         remaining.resize(num_remaining);
-
-        py::print("cur_row end", row_idx);
     }
-
 
     // update dual variables
     // u_data(row_idx) += minVal;
     for (int i = 0; i < nr; i++) {
         if (SR[i]) {
-            py::print("i", i);
-            py::print("cur_row", cur_row);
-            if (i == row_idx) {
+            if (i == cur_row) {
                 u_data(i) += minVal;
             }
             else {
-                py::print("col4row(i)", col4row_data(i));
                 u_data(i) += minVal - shortestPathCosts[col4row_data(i)];
             }
         }
     }
-    py::print("u", u);
 
     for (int j = 0; j < nc; j++) {
         if (SC[j]) {
             v_data(j) -= minVal - shortestPathCosts[j];
         }
     }
-    py::print("v", v);
 
     // augment previous solution
     int col_idx = sink;
@@ -202,10 +175,8 @@ augment(py::array_t<double> cost_matrix,
         if (row_idx == cur_row) {
             break;
         }
-        py::print("Stuck?");
     }
 
-    py::print("assignments", row4col, col4row);
 }
 
 template <class T>
@@ -234,7 +205,6 @@ _solve(py::array_t<double> cost_matrix)
 
     // TODO: We only use cost_matrix through cost_matrix.unchecked<2>()
     for (int cur_row = 0; cur_row < nr; cur_row++) {
-        py::print("Current row:", cur_row);
         augment(cost_matrix, cur_row, row4col, col4row, u, v);
     }
 
