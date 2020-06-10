@@ -31,7 +31,7 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
 
     min_val = 0
     row_idx = cur_row
-    remaining = set(range(n_cols))
+    remaining = set(range(n_cols - 1, -1, -1))
 
     path = np.full(n_cols, -1)
     shortest_path_costs = np.full(n_cols, np.inf)
@@ -42,6 +42,9 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
 
     sink = -1
     while sink == -1:
+        print("cur_row start", row_idx)
+        print("remaining", remaining)
+
         idx_min = -1  # idx_min = argmin(shortest_path_costs)
         lowest = np.inf
         SR.add(row_idx)
@@ -60,6 +63,10 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
                 lowest = shortest_path_costs[col_idx]
                 idx_min = col_idx
 
+        print("path", path)
+        print("shortest path costs", shortest_path_costs)
+        print("idx and min", idx_min, lowest)
+
         min_val = lowest
 
         # If the cost matrix is infeasible
@@ -75,16 +82,23 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
 
         # Remove the visited column from remaining
         remaining.remove(idx_min)
+        print("cur_row end", row_idx)
 
     # Update the dual variables
     for i in SR:
+        print("i", i)
         if i == cur_row:
             u[i] += min_val
         else:
+            print("col4row[i]", col4row[i])
             u[i] += min_val - shortest_path_costs[col4row[i]]
+
+    print("u", u)
 
     for j in SC:
         v[j] -= min_val - shortest_path_costs[j]
+
+    print("v", v)
 
     # Augment the Previous Solution
     col_idx = sink
@@ -94,6 +108,8 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
         col4row[row_idx], col_idx = col_idx, col4row[row_idx]
         if row_idx == cur_row:
             break
+
+    print("assignments", row4col, col4row)
 
 
 def _solve(cost_matrix):
