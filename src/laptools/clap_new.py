@@ -77,7 +77,7 @@ def costs(cost_matrix):
     # Since there are at least as many columns as rows, row_idxs should
     # be identical to np.arange(n_rows). We depend on this.
     row_idxs = np.arange(n_rows)
-    row4col, col4row, u, v = lap.solve(cost_matrix)
+    row4col, col4row, u, v = lap._solve(cost_matrix)
 
     # Column vector of costs of each assignment in the lsap solution.
     lsap_costs = cost_matrix[row_idxs, col4row]

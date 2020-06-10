@@ -13,4 +13,4 @@ __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 
 from . import clap, clap_new, lap
 
-__all__ = ["clap", "lap"]
+__all__ = ["clap", "clap_new", "lap"]
