@@ -76,7 +76,7 @@ augment(py::array_t<double> cost_matrix,
 
     // u_data is the data from the numpy array u. i.e. u(i) is the i'th element.
 
-
+    int row_idx = cur_row;
     double minVal = 0;
     int nr = cost_matrix.shape(0);
     int nc = cost_matrix.shape(1);
@@ -104,7 +104,7 @@ augment(py::array_t<double> cost_matrix,
     // find shortest augmenting path
     int sink = -1;
     while (sink == -1) {
-        py::print("cur_row start", cur_row);
+        py::print("cur_row start", row_idx);
 
         std::cout << "remaining" << " ";
         for(auto itr : remaining)
@@ -113,14 +113,14 @@ augment(py::array_t<double> cost_matrix,
 
         int index = -1;
         double lowest = INFINITY;
-        SR[cur_row] = true;
+        SR[row_idx] = true;
 
         for (int it = 0; it < num_remaining; it++) {
             int j = remaining[it];
 
-            double r = minVal + cost_data(cur_row, j)- u_data(cur_row) - v_data(j);
+            double r = minVal + cost_data(row_idx, j)- u_data(row_idx) - v_data(j);
             if (r < shortestPathCosts[j]) {
-                path[j] = cur_row;
+                path[j] = row_idx;
                 shortestPathCosts[j] = r;
             }
 
@@ -158,23 +158,24 @@ augment(py::array_t<double> cost_matrix,
         if (row4col_data(j) == -1) {
             sink = j;
         } else {
-            cur_row = row4col_data(j);
+            row_idx = row4col_data(j);
         }
 
         SC[j] = true;
         remaining[index] = remaining[--num_remaining];
         remaining.resize(num_remaining);
 
-        py::print("cur_row end", cur_row);
+        py::print("cur_row end", row_idx);
     }
 
 
     // update dual variables
-    // u_data(cur_row) += minVal;
+    // u_data(row_idx) += minVal;
     for (int i = 0; i < nr; i++) {
         if (SR[i]) {
             py::print("i", i);
-            if (i == cur_row) {
+            py::print("cur_row", cur_row);
+            if (i == row_idx) {
                 u_data(i) += minVal;
             }
             else {
@@ -193,12 +194,12 @@ augment(py::array_t<double> cost_matrix,
     py::print("v", v);
 
     // augment previous solution
-    int j = sink;
+    int col_idx = sink;
     while (1) {
-        int i = path[j];
-        row4col_data(j) = i;
-        std::swap(col4row_data(i), j);
-        if (i == cur_row) {
+        row_idx = path[col_idx];
+        row4col_data(col_idx) = row_idx;
+        std::swap(col4row_data(row_idx), col_idx);
+        if (row_idx == cur_row) {
             break;
         }
         py::print("Stuck?");
@@ -219,8 +220,6 @@ _solve(py::array_t<double> cost_matrix)
 {
     int nr = cost_matrix.shape(0);
     int nc = cost_matrix.shape(1);
-
-    py::print("rows", nr, "cols", nc);
 
     py::array_t<double> u = py::array_t<double>(nr);
     py::array_t<double> v = py::array_t<double>(nc);

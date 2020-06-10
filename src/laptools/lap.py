@@ -87,6 +87,7 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
     # Update the dual variables
     for i in SR:
         print("i", i)
+        print("cur_row", cur_row)
         if i == cur_row:
             u[i] += min_val
         else:
