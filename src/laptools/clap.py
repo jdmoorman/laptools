@@ -31,7 +31,6 @@ def cost(i, j, cost_matrix):
     sub_cost_matrix = cost_matrix[~one_hot(i, n_rows), :][:, ~one_hot(j, n_cols)]
 
     # Lsap solution for the submatrix.
-    # Lsap solution for the submatrix.
     try:
         sub_row_ind, sub_col_ind = linear_sum_assignment(sub_cost_matrix)
     except ValueError as e:
