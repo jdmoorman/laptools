@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from laptools import clap
+from laptools import clap_new
 
 # fmt: off
 cost_matrix_0 = [[4, 1, 3],
@@ -107,7 +107,7 @@ class TestClap:
     )
     def test_clap_cost(self, i, j, cost_matrix, expected):
         """Verify clap.cost works on small examples computable by hand."""
-        assert clap.cost(i, j, cost_matrix) == expected
+        assert clap_new.cost(i, j, cost_matrix) == expected
 
     @pytest.mark.parametrize(
         "cost_matrix, expected_global_costs",
@@ -124,9 +124,9 @@ class TestClap:
     )
     def test_clap_costs(self, cost_matrix, expected_global_costs):
         """Verify clap.constrained_lsap_costs works on small examples."""
-        assert clap.costs(cost_matrix).tolist() == expected_global_costs.tolist()
+        assert clap_new.costs(cost_matrix).tolist() == expected_global_costs.tolist()
 
         num_rows, num_cols = np.array(cost_matrix).shape
         for i in range(num_rows):
             for j in range(num_cols):
-                assert clap.cost(i, j, cost_matrix) == expected_global_costs[i, j]
+                assert clap_new.cost(i, j, cost_matrix) == expected_global_costs[i, j]
