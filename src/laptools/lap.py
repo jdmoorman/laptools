@@ -65,7 +65,7 @@ def augment(cost_matrix, cur_row, row4col, col4row, u, v):
 
         # If the cost matrix is infeasible
         if min_val == np.inf:
-            raise ValueError("The cost matrix is infeasible.")
+            raise ValueError("cost matrix is infeasible")
 
         if row4col[idx_min] == -1:
             sink = idx_min
