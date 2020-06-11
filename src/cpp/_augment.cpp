@@ -59,7 +59,7 @@ namespace py = pybind11;
 #include <vector>
 
 
-void
+py::tuple
 augment(py::array_t<double> cost_matrix,
         int cur_row,
         py::array_t<int> row4col,
@@ -76,8 +76,8 @@ augment(py::array_t<double> cost_matrix,
 
     // u_data is the data from the numpy array u. i.e. u(i) is the i'th element.
 
-    int row_idx = cur_row;
     double minVal = 0;
+    int row_idx = cur_row;
     int nr = cost_matrix.shape(0);
     int nc = cost_matrix.shape(1);
 
@@ -89,6 +89,7 @@ augment(py::array_t<double> cost_matrix,
         // Filling this up in reverse order ensures that the solution of a
         // constant cost matrix is the identity matrix (c.f. #11602).
         remaining[it] = nc - it - 1;
+        // remaining[it] = it;
     }
 
     std::vector<int> path(nc, -1);
@@ -132,9 +133,9 @@ augment(py::array_t<double> cost_matrix,
         int j = remaining[index];
 
         // TODO: raise an exception if minVal is INFINITY
-        // if (minVal == INFINITY) { // infeasible cost matrix
-        //     return -1;
-        // }
+        if (minVal == INFINITY) { // infeasible cost matrix
+            throw pybind11::value_error("cost matrix is infeasible");
+        }
 
         if (row4col_data(j) == -1) {
             sink = j;
@@ -177,6 +178,8 @@ augment(py::array_t<double> cost_matrix,
         }
     }
 
+    return py::make_tuple(row4col, col4row, u, v);
+
 }
 
 template <class T>
@@ -209,70 +212,7 @@ _solve(py::array_t<double> cost_matrix)
     }
 
     return py::make_tuple(row4col, col4row, u, v);
-    // int nr = cost_matrix.shape(0);
-    // int nc = cost_matrix.shape(1);
-    //
-    // // initialize variables
-    // std::vector<double> u(nr, 0);
-    // std::vector<double> v(nc, 0);
-    // std::vector<double> shortestPathCosts(nc);
-    // std::vector<int> path(nc, -1);
-    // std::vector<int> col4row(nr, -1);
-    // std::vector<int> row4col(nc, -1);
-    // std::vector<bool> SR(nr);
-    // std::vector<bool> SC(nc);
-    //
-    // // iteratively build the solution
-    // for (int cur_row = 0; cur_row < nr; cur_row++) {
-    //
-    //     double minVal;
-    //     int sink = augmenting_path(nc, cost, u, v, path, row4col,
-    //                                shortestPathCosts, curRow, SR, SC, &minVal);
-    //     if (sink < 0) {
-    //         return -1;
-    //     }
-    //
-    //     // update dual variables
-    //     u[curRow] += minVal;
-    //     for (int i = 0; i < nr; i++) {
-    //         if (SR[i] && i != curRow) {
-    //             u[i] += minVal - shortestPathCosts[col4row[i]];
-    //         }
-    //     }
-    //
-    //     for (int j = 0; j < nc; j++) {
-    //         if (SC[j]) {
-    //             v[j] -= minVal - shortestPathCosts[j];
-    //         }
-    //     }
-    //
-    //     // augment previous solution
-    //     int j = sink;
-    //     while (1) {
-    //         int i = path[j];
-    //         row4col[j] = i;
-    //         std::swap(col4row[i], j);
-    //         if (i == curRow) {
-    //             break;
-    //         }
-    //     }
-    // }
-    //
-    // for (int i = 0; i < nr; i++) {
-    //     output_col4row[i] = col4row[i];
-    // }
-    //
-    // return 0;
 
-    //
-    // std::vector<int> col4row(nr, -1);
-    // std::vector<int> row4col(nc, -1);
-    //
-    //
-    // std::vector<double> u(nr, 0);
-    // std::vector<double> v(nc, 0);
-    //
-    // return py::make_tuple(ret);
 }
 
 PYBIND11_MODULE(_augment, m) {
