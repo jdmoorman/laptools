@@ -5,16 +5,12 @@ import pyperf
 
 
 def get_solvers():
-    # from lapjv import lapjv as lapjv_lap
-    from scipy.optimize import linear_sum_assignment as scipy_lap
-    from laptools.lap import solve as laptools_lap
-    from laptools.lap_cpp import solve as laptools_lap_cpp
+    from laptools.clap import costs as costs_old
+    from laptools.clap_new import costs as costs_new
 
     return {
-        "scipy": scipy_lap,
-        # "lapjv": lapjv_lap,
-        "laptools": laptools_lap,
-        "laptools_cpp": laptools_lap_cpp,
+        "clap_old": costs_old,
+        "clap_new": costs_new,
     }
 
 
@@ -27,24 +23,38 @@ def time_func(n_inner_loops, solver, shape):
 
 
 def get_bench_name(size, solver_name):
-    return "{}-{}".format(size, solver_name)
+    return "{}x{}-{}".format(size[0], size[1], solver_name)
 
 
 def parse_args(benchopts):
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--min-size-pow",
+        "--min-row-size-pow",
         type=int,
         metavar="POW",
         default=1,
-        help="Smallest test matrix will be size 2^POW by 2^POW.",
+        help="Smallest number of rows is 2^POW.",
     )
     parser.add_argument(
-        "--max-size-pow",
+        "--min-col-size-pow",
+        type=int,
+        metavar="POW",
+        default=1,
+        help="Smallest number of cols is 2^POW.",
+    )
+    parser.add_argument(
+        "--max-row-size-pow",
         type=int,
         metavar="POW",
         default=2,
-        help="Largest test matrix will be size 2^POW by 2^POW.",
+        help="Largest number of rows is 2^POW.",
+    )
+    parser.add_argument(
+        "--max-col-size-pow",
+        type=int,
+        metavar="POW",
+        default=2,
+        help="Largest number of cols is 2^POW.",
     )
     return parser.parse_args(benchopts)
 
@@ -60,11 +70,15 @@ def main():
     args = parse_args(runner.parse_args().benchopts)
 
     solvers = get_solvers()
-    sizes = 2 ** np.arange(args.min_size_pow, args.max_size_pow + 1)
+    sizes = [
+        (n_rows, n_cols)
+        for n_rows in 2 ** np.arange(args.min_row_size_pow, args.max_row_size_pow + 1)
+        for n_cols in 2 ** np.arange(args.min_col_size_pow, args.max_col_size_pow + 1)
+    ]
     for size in sizes:
         for solver_name, solver_func in solvers.items():
             bench_name = get_bench_name(size, solver_name)
-            runner.bench_time_func(bench_name, time_func, solver_func, (size, size))
+            runner.bench_time_func(bench_name, time_func, solver_func, size)
 
 
 if __name__ == "__main__":
