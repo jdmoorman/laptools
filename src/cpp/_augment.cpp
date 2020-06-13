@@ -200,10 +200,11 @@ _solve(py::array_t<double> cost_matrix)
 
 PYBIND11_MODULE(_augment, m) {
     m.def("augment", &augment, R"pbdoc(
-        Add two numbers
-        Some other explanation about the add function.
+        TODO: Docstring.
     )pbdoc");
     m.def("_solve", &_solve, R"pbdoc(
         Solve the linear assignment problem.
+
+        TODO: Docstring.
     )pbdoc");
 }
