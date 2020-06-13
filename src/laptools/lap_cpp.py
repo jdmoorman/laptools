@@ -128,9 +128,7 @@ def solve_lsap_with_removed_row(
     sub_row4col[row_removed] = -1
 
     # Find the shortest augmenting path for the sub square lsap and augment.
-    sub_row4col, sub_col4row, u, sub_v = augment(
-        sub_cost_matrix, row_removed, sub_row4col, sub_col4row, u, sub_v
-    )
+    augment(sub_cost_matrix, row_removed, sub_row4col, sub_col4row, u, sub_v)
 
     # Update the original assignment
     # Note: update every variable that depends on col4row for indexing first.
