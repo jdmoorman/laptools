@@ -60,7 +60,7 @@ namespace py = pybind11;
 #include <cstdint>
 
 
-py::tuple
+void
 augment(py::array_t<double> cost_matrix,
         long cur_row,
         py::array_t<long> row4col,

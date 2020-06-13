@@ -189,5 +189,6 @@ def solve_lsap_with_removed_col(
     row4col[col_removed] = -1
 
     # Perform another augmenting step
+    augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
 
-    return augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
+    return row4col, col4row, u, v
