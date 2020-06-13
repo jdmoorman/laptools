@@ -15,6 +15,9 @@ def test_augment():
     inputs = [row4col, col4row, u, v]
     outputs = augment(cost_matrix, 0, row4col, col4row, u, v)
 
+    print("input dtypes", [elm.dtype for elm in inputs])
+    print("output dtypes", [elm.dtype for elm in outputs])
+
     assert [elm.dtype for elm in inputs] == [elm.dtype for elm in outputs]
     assert [id(elm) for elm in inputs] == [id(elm) for elm in outputs]
 
