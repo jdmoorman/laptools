@@ -7,7 +7,7 @@ __version__ = "0.1.8"
 __author__ = "Jacob Moorman"
 __email__ = "jacob@moorman.me"
 
-__license__ = "MIT license".rstrip(" license")
+__license__ = "MIT"
 __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 
 
