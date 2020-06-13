@@ -39,21 +39,6 @@ Author: PM Larsen
 
 namespace py = pybind11;
 
-// // Note that though this function expects arrays of doubles, it will accept
-// // arrays of any type and cast them silently. Thus, for best performance,
-// // be sure to convert arrays to doubles in advance.
-// double augment(py::array_t<double> cost_matrix) {
-//     auto cost_data = cost_matrix.unchecked<2>();
-//     double sum = 0;
-//     for (auto i = 0; i < cost_data.shape(0); i++) {
-//         for (auto j = 0; j < cost_data.shape(1); j++) {
-//             sum += cost_data(i, j);
-//         }
-//     }
-//     return sum;
-// }
-
-
 #include <algorithm>
 #include <cmath>
 #include <vector>
