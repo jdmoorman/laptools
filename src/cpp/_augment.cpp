@@ -178,9 +178,6 @@ augment(py::array_t<double> cost_matrix,
             break;
         }
     }
-
-    return py::make_tuple(row4col, col4row, u, v);
-
 }
 
 template <class T>
