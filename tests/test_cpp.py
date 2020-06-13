@@ -12,14 +12,8 @@ def test_augment():
     v = np.array([-2.0, 0.0, 0.0])
 
     row4col_copy, col4row_copy = row4col.copy(), col4row.copy()
-    inputs = [row4col, col4row, u, v]
-    outputs = augment(cost_matrix, 0, row4col, col4row, u, v)
 
-    print("input dtypes", [elm.dtype for elm in inputs])
-    print("output dtypes", [elm.dtype for elm in outputs])
-
-    assert [elm.dtype for elm in inputs] == [elm.dtype for elm in outputs]
-    assert [id(elm) for elm in inputs] == [id(elm) for elm in outputs]
+    augment(cost_matrix, 0, row4col, col4row, u, v)
 
     assert row4col_copy.tolist() != row4col.tolist()
     assert col4row_copy.tolist() != col4row.tolist()

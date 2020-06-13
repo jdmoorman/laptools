@@ -62,9 +62,9 @@ namespace py = pybind11;
 
 py::tuple
 augment(py::array_t<double> cost_matrix,
-        int64_t cur_row,
-        py::array_t<int64_t> row4col,
-        py::array_t<int64_t> col4row,
+        long cur_row,
+        py::array_t<long> row4col,
+        py::array_t<long> col4row,
         py::array_t<double> u,
         py::array_t<double> v)
 {
@@ -78,22 +78,22 @@ augment(py::array_t<double> cost_matrix,
     // u_data is the data from the numpy array u. i.e. u(i) is the i'th element.
 
     double minVal = 0;
-    int64_t row_idx = cur_row;
-    int64_t nr = cost_matrix.shape(0);
-    int64_t nc = cost_matrix.shape(1);
+    long row_idx = cur_row;
+    long nr = cost_matrix.shape(0);
+    long nc = cost_matrix.shape(1);
 
     // Crouse's pseudocode uses set complements to keep track of remaining
     // nodes.  Here we use a vector, as it is more efficient in C++.
-    int64_t num_remaining = nc;
-    std::vector<int64_t> remaining(nc);
-    for (int64_t it = 0; it < nc; it++) {
+    long num_remaining = nc;
+    std::vector<long> remaining(nc);
+    for (long it = 0; it < nc; it++) {
         // Filling this up in reverse order ensures that the solution of a
         // constant cost matrix is the identity matrix (c.f. #11602).
         remaining[it] = nc - it - 1;
         // remaining[it] = it;
     }
 
-    std::vector<int64_t> path(nc, -1);
+    std::vector<long> path(nc, -1);
     std::vector<double> shortestPathCosts(nc);
     std::fill(shortestPathCosts.begin(), shortestPathCosts.end(), INFINITY);
 
@@ -104,15 +104,15 @@ augment(py::array_t<double> cost_matrix,
     std::fill(SC.begin(), SC.end(), false);
 
     // find shortest augmenting path
-    int64_t sink = -1;
+    long sink = -1;
     while (sink == -1) {
 
-        int64_t index = -1;
+        long index = -1;
         double lowest = INFINITY;
         SR[row_idx] = true;
 
-        for (int64_t it = 0; it < num_remaining; it++) {
-            int64_t j = remaining[it];
+        for (long it = 0; it < num_remaining; it++) {
+            long j = remaining[it];
 
             double r = minVal + cost_data(row_idx, j)- u_data(row_idx) - v_data(j);
             if (r < shortestPathCosts[j]) {
@@ -131,7 +131,7 @@ augment(py::array_t<double> cost_matrix,
         }
 
         minVal = lowest;
-        int64_t j = remaining[index];
+        long j = remaining[index];
 
         // TODO: raise an exception if minVal is INFINITY
         if (minVal == INFINITY) { // infeasible cost matrix
@@ -151,7 +151,7 @@ augment(py::array_t<double> cost_matrix,
 
     // update dual variables
     // u_data(row_idx) += minVal;
-    for (int64_t i = 0; i < nr; i++) {
+    for (long i = 0; i < nr; i++) {
         if (SR[i]) {
             if (i == cur_row) {
                 u_data(i) += minVal;
@@ -162,14 +162,14 @@ augment(py::array_t<double> cost_matrix,
         }
     }
 
-    for (int64_t j = 0; j < nc; j++) {
+    for (long j = 0; j < nc; j++) {
         if (SC[j]) {
             v_data(j) -= minVal - shortestPathCosts[j];
         }
     }
 
     // augment previous solution
-    int64_t col_idx = sink;
+    long col_idx = sink;
     while (1) {
         row_idx = path[col_idx];
         row4col_data(col_idx) = row_idx;
@@ -193,22 +193,22 @@ py::array_t<T>  _fill(py::array_t<T> arr, T val) {
 py::tuple
 _solve(py::array_t<double> cost_matrix)
 {
-    int64_t nr = cost_matrix.shape(0);
-    int64_t nc = cost_matrix.shape(1);
+    long nr = cost_matrix.shape(0);
+    long nc = cost_matrix.shape(1);
 
     py::array_t<double> u = py::array_t<double>(nr);
     py::array_t<double> v = py::array_t<double>(nc);
-    py::array_t<int64_t> row4col = py::array_t<int64_t>(nc);
-    py::array_t<int64_t> col4row = py::array_t<int64_t>(nr);
+    py::array_t<long> row4col = py::array_t<long>(nc);
+    py::array_t<long> col4row = py::array_t<long>(nr);
 
     // TODO: Can we skip this or fold it into the allocation step above?
     _fill<double>(u, 0.);
     _fill<double>(v, 0.);
-    _fill<int64_t>(row4col, -1);
-    _fill<int64_t>(col4row, -1);
+    _fill<long>(row4col, -1);
+    _fill<long>(col4row, -1);
 
     // TODO: We only use cost_matrix through cost_matrix.unchecked<2>()
-    for (int64_t cur_row = 0; cur_row < nr; cur_row++) {
+    for (long cur_row = 0; cur_row < nr; cur_row++) {
         augment(cost_matrix, cur_row, row4col, col4row, u, v);
     }
 
