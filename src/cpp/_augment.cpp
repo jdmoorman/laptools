@@ -44,42 +44,42 @@ namespace py = pybind11;
 #include <vector>
 #include <cstdint>
 
-
+template <class TIndex, class TCost>
 void
-augment(py::array_t<double> cost_matrix,
-        long cur_row,
-        py::array_t<long> row4col,
-        py::array_t<long> col4row,
-        py::array_t<double> u,
-        py::array_t<double> v)
+augment(py::array_t<TCost> cost_matrix,
+        TIndex cur_row,
+        py::array_t<TIndex> row4col,
+        py::array_t<TIndex> col4row,
+        py::array_t<TCost> u,
+        py::array_t<TCost> v)
 {
     // u is a numpy array, we don't know how to access its data
-    auto cost_data = cost_matrix.unchecked<2>();
-    auto u_data = u.mutable_unchecked<1>();
-    auto v_data = v.mutable_unchecked<1>();
-    auto row4col_data = row4col.mutable_unchecked<1>();
-    auto col4row_data = col4row.mutable_unchecked<1>();
+    auto cost_data = cost_matrix.template unchecked<2>();
+    auto u_data = u.template mutable_unchecked<1>();
+    auto v_data = v.template mutable_unchecked<1>();
+    auto row4col_data = row4col.template mutable_unchecked<1>();
+    auto col4row_data = col4row.template mutable_unchecked<1>();
 
     // u_data is the data from the numpy array u. i.e. u(i) is the i'th element.
 
-    double minVal = 0;
-    long row_idx = cur_row;
-    long nr = cost_matrix.shape(0);
-    long nc = cost_matrix.shape(1);
+    TCost minVal = 0;
+    TIndex row_idx = cur_row;
+    TIndex nr = cost_matrix.shape(0);
+    TIndex nc = cost_matrix.shape(1);
 
     // Crouse's pseudocode uses set complements to keep track of remaining
     // nodes.  Here we use a vector, as it is more efficient in C++.
-    long num_remaining = nc;
-    std::vector<long> remaining(nc);
-    for (long it = 0; it < nc; it++) {
+    TIndex num_remaining = nc;
+    std::vector<TIndex> remaining(nc);
+    for (TIndex it = 0; it < nc; it++) {
         // Filling this up in reverse order ensures that the solution of a
         // constant cost matrix is the identity matrix (c.f. #11602).
         remaining[it] = nc - it - 1;
         // remaining[it] = it;
     }
 
-    std::vector<long> path(nc, -1);
-    std::vector<double> shortestPathCosts(nc);
+    std::vector<TIndex> path(nc, -1);
+    std::vector<TCost> shortestPathCosts(nc);
     std::fill(shortestPathCosts.begin(), shortestPathCosts.end(), INFINITY);
 
     // TODO: Decide whether to take the allocation outside the augment function.
@@ -89,17 +89,17 @@ augment(py::array_t<double> cost_matrix,
     std::fill(SC.begin(), SC.end(), false);
 
     // find shortest augmenting path
-    long sink = -1;
+    TIndex sink = -1;
     while (sink == -1) {
 
-        long index = -1;
-        double lowest = INFINITY;
+        TIndex index = -1;
+        TCost lowest = INFINITY;
         SR[row_idx] = true;
 
-        for (long it = 0; it < num_remaining; it++) {
-            long j = remaining[it];
+        for (TIndex it = 0; it < num_remaining; it++) {
+            TIndex j = remaining[it];
 
-            double r = minVal + cost_data(row_idx, j)- u_data(row_idx) - v_data(j);
+            TCost r = minVal + cost_data(row_idx, j)- u_data(row_idx) - v_data(j);
             if (r < shortestPathCosts[j]) {
                 path[j] = row_idx;
                 shortestPathCosts[j] = r;
@@ -116,7 +116,7 @@ augment(py::array_t<double> cost_matrix,
         }
 
         minVal = lowest;
-        long j = remaining[index];
+        TIndex j = remaining[index];
 
         // TODO: raise an exception if minVal is INFINITY
         if (minVal == INFINITY) { // infeasible cost matrix
@@ -136,7 +136,7 @@ augment(py::array_t<double> cost_matrix,
 
     // update dual variables
     // u_data(row_idx) += minVal;
-    for (long i = 0; i < nr; i++) {
+    for (TIndex i = 0; i < nr; i++) {
         if (SR[i]) {
             if (i == cur_row) {
                 u_data(i) += minVal;
@@ -147,14 +147,14 @@ augment(py::array_t<double> cost_matrix,
         }
     }
 
-    for (long j = 0; j < nc; j++) {
+    for (TIndex j = 0; j < nc; j++) {
         if (SC[j]) {
             v_data(j) -= minVal - shortestPathCosts[j];
         }
     }
 
     // augment previous solution
-    long col_idx = sink;
+    TIndex col_idx = sink;
     while (1) {
         row_idx = path[col_idx];
         row4col_data(col_idx) = row_idx;
@@ -171,40 +171,59 @@ py::array_t<T>  _fill(py::array_t<T> arr, T val) {
     return arr;
 }
 
-// TODO: Figure out how to do templates: template <class T>, py::array_t<T>
+template <class T>
 py::tuple
-_solve(py::array_t<double> cost_matrix)
+_solve(py::array_t<T> cost_matrix)
 {
     long nr = cost_matrix.shape(0);
     long nc = cost_matrix.shape(1);
 
-    py::array_t<double> u = py::array_t<double>(nr);
-    py::array_t<double> v = py::array_t<double>(nc);
+    py::array_t<T> u = py::array_t<T>(nr);
+    py::array_t<T> v = py::array_t<T>(nc);
     py::array_t<long> row4col = py::array_t<long>(nc);
     py::array_t<long> col4row = py::array_t<long>(nr);
 
     // TODO: Can we skip this or fold it into the allocation step above?
-    _fill<double>(u, 0.);
-    _fill<double>(v, 0.);
+    _fill<T>(u, 0.);
+    _fill<T>(v, 0.);
     _fill<long>(row4col, -1);
     _fill<long>(col4row, -1);
 
     // TODO: We only use cost_matrix through cost_matrix.unchecked<2>()
     for (long cur_row = 0; cur_row < nr; cur_row++) {
-        augment(cost_matrix, cur_row, row4col, col4row, u, v);
+        augment<long, T>(cost_matrix, cur_row, row4col, col4row, u, v);
     }
 
     return py::make_tuple(row4col, col4row, u, v);
 
 }
 
-PYBIND11_MODULE(_augment, m) {
-    m.def("augment", &augment, R"pbdoc(
-        TODO: Docstring.
-    )pbdoc");
-    m.def("_solve", &_solve, R"pbdoc(
+template <class TIndex, class TCost>
+void def_augment(py::module m) {
+    m.def("augment", &augment<TIndex, TCost>,
+        R"pbdoc(
+            TODO: Docstring.
+        )pbdoc",
+        py::arg("cost_matrix").noconvert(),
+        py::arg("cur_row").noconvert(),
+        py::arg("row4col").noconvert(),
+        py::arg("col4row").noconvert(),
+        py::arg("u").noconvert(),
+        py::arg("v").noconvert()
+    );
+}
+
+template <class T>
+void def_solve(py::module m) {
+    m.def("_solve", &_solve<T>, R"pbdoc(
         Solve the linear assignment problem.
 
         TODO: Docstring.
     )pbdoc");
+    // TODO: noconvert
+}
+
+PYBIND11_MODULE(_augment, m) {
+    def_augment<long, double>(m);
+    def_solve<double>(m);
 }
