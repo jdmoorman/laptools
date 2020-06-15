@@ -2,8 +2,6 @@ import numpy as np
 
 from _augment import _solve, augment
 
-# TODO: make sure that np.array and astype conversion is not repeated.
-
 
 def solve(cost_matrix, maximize=False):
     """Solve the linear sum assignment based on the cost matrix. The return
@@ -90,7 +88,7 @@ def solve_lsap_with_removed_row(
     modify_val : bool, optional
         A flag that indicates whether variables are modified in place.
     """
-    cost_matrix = np.array(cost_matrix)
+    # cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
 
     # Copy the variables if they are not modified in place.
@@ -121,7 +119,6 @@ def solve_lsap_with_removed_row(
 
     # Remove the assignment associated with the removed row. Note that in the
     # submatrix, the removed row and the freed up column have the same index.
-    # TODO: check whether the following expressions are correct
     sub_col4row = np.arange(n_rows)
     sub_col4row[row_removed] = -1
     sub_row4col = np.arange(n_rows)
@@ -144,7 +141,6 @@ def solve_lsap_with_removed_col(
 ):
     """Solve the sub linear sum assignment problem with one column removed.
 
-    TODO: Add tests for this function.
     Note: While the cost matrix will not be modified, the dual variables would
           be updated as if the removed column does not exist.
 
@@ -169,9 +165,6 @@ def solve_lsap_with_removed_col(
     # No need to reassign anything
     if row_freed == -1:
         return row4col, col4row, u, v
-
-    cost_matrix = np.array(cost_matrix)
-    cost_matrix = cost_matrix.astype(np.double)
 
     # Copy the variables if they are not modified in place.
     if not modify_val:
