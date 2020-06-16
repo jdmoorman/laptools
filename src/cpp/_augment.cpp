@@ -78,11 +78,12 @@ augment(py::array_t<TCost> cost_matrix,
         // remaining[it] = it;
     }
 
+    // TODO: Try moving the allocation outside the augment function to be done just once.
     std::vector<TIndex> path(nc, -1);
     std::vector<TCost> shortestPathCosts(nc);
     std::fill(shortestPathCosts.begin(), shortestPathCosts.end(), INFINITY);
 
-    // TODO: Decide whether to take the allocation outside the augment function.
+    // TODO: Try moving the allocation outside the augment function to be done just once.
     std::vector<bool> SR(nr);
     std::vector<bool> SC(nc);
     std::fill(SR.begin(), SR.end(), false);
