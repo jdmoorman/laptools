@@ -10,10 +10,21 @@ def get_solver_from_bench(bench):
 
     Assumes each benchmark's name is of the format:
 
-        "problem_size solver_name"
+        "problem_size matrix_type solver_name"
     """
-    _, solver = bench.get_name().split("-")
+    _, _, solver = bench.get_name().split("-")
     return solver
+
+
+def get_type_from_bench(bench):
+    """Extract the matrix type from a benchmark.
+
+    Assumes each benchmark's name is of the format:
+
+        "problem_size matrix_type solver_name"
+    """
+    _, type, _ = bench.get_name().split("-")
+    return type
 
 
 def get_size_from_bench(bench):
@@ -21,9 +32,9 @@ def get_size_from_bench(bench):
 
     Assumes each benchmark's name is of the format:
 
-        "problem_size solver_name"
+        "problem_size matrix_type solver_name"
     """
-    size, _ = bench.get_name().split("-")
+    size, _, _ = bench.get_name().split("-")
     return int(size)
 
 

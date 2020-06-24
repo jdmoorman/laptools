@@ -2,32 +2,53 @@ import argparse
 
 import numpy as np
 import pyperf
+from utils import (
+    geometric_matrix,
+    machol_wien_matrix,
+    random_machol_wien_matrix,
+    uniform_matrix,
+)
 
 
 def get_solvers():
-    # from lapjv import lapjv as lapjv_lap
+    from lapjv import lapjv as lapjv_lap
+    from lapjv_noinit import lapjv as lapjv_noinit_lap
+    from lapsolver import solve_dense
     from scipy.optimize import linear_sum_assignment as scipy_lap
     from laptools.lap import solve as laptools_lap
-    from laptools.lap_cpp import solve as laptools_lap_cpp
+    from laptools.lap_cpp import solve as laptools_cpp_lap
 
     return {
         "scipy": scipy_lap,
-        # "lapjv": lapjv_lap,
-        "laptools": laptools_lap,
-        "laptools_cpp": laptools_lap_cpp,
+        "lapjv": lapjv_lap,
+        "lapjv_noinit": lapjv_noinit_lap,
+        "lapsolver": solve_dense,
+        # "laptools": laptools_lap,
+        "laptools_cpp": laptools_cpp_lap,
     }
 
 
-def time_func(n_inner_loops, solver, shape):
-    cost_matrix = np.random.random(shape)
+def time_func(n_inner_loops, solver, shape, type):
+    # Note: If no matrix type is indicated, then the matrix is uniformly random
+    if type == "uniform":
+        cost_matrix = uniform_matrix(shape)
+    if type == "geometric":
+        cost_matrix = geometric_matrix(shape)
+    elif type == "MW":
+        cost_matrix = machol_wien_matrix(shape)
+    elif type == "random_MW":
+        cost_matrix = random_machol_wien_matrix(shape)
+    else:
+        cost_matrix = np.random.random(shape)
+
     t0 = pyperf.perf_counter()
     for i in range(n_inner_loops):
         solver(cost_matrix)
     return pyperf.perf_counter() - t0
 
 
-def get_bench_name(size, solver_name):
-    return "{}-{}".format(size, solver_name)
+def get_bench_name(size, type, solver_name):
+    return "{}-{}-{}".format(size, type, solver_name)
 
 
 def parse_args(benchopts):
@@ -46,6 +67,13 @@ def parse_args(benchopts):
         default=2,
         help="Largest test matrix will be size 2^POW by 2^POW.",
     )
+    parser.add_argument(
+        "--matrix-type",
+        type=str,
+        metavar="X",
+        default="random",
+        help="The matrix is of type X.",
+    )
     return parser.parse_args(benchopts)
 
 
@@ -61,10 +89,13 @@ def main():
 
     solvers = get_solvers()
     sizes = 2 ** np.arange(args.min_size_pow, args.max_size_pow + 1)
+    type = args.matrix_type
     for size in sizes:
         for solver_name, solver_func in solvers.items():
-            bench_name = get_bench_name(size, solver_name)
-            runner.bench_time_func(bench_name, time_func, solver_func, (size, size))
+            bench_name = get_bench_name(size, type, solver_name)
+            runner.bench_time_func(
+                bench_name, time_func, solver_func, (size, size), type
+            )
 
 
 if __name__ == "__main__":
