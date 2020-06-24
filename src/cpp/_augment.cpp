@@ -44,6 +44,8 @@ namespace py = pybind11;
 #include <vector>
 #include <cstdint>
 
+// TODO: If moving the allocations outside of augment makes things faster,
+// we may need to have separate implementations of augment for c++ vs. python.
 template <class TIndex, class TCost>
 void
 augment(py::array_t<TCost> cost_matrix,
@@ -70,6 +72,7 @@ augment(py::array_t<TCost> cost_matrix,
     // Crouse's pseudocode uses set complements to keep track of remaining
     // nodes.  Here we use a vector, as it is more efficient in C++.
     TIndex num_remaining = nc;
+    // TODO: Try moving the allocation outside the augment function to be done just once.
     std::vector<TIndex> remaining(nc);
     for (TIndex it = 0; it < nc; it++) {
         // Filling this up in reverse order ensures that the solution of a
@@ -78,11 +81,12 @@ augment(py::array_t<TCost> cost_matrix,
         // remaining[it] = it;
     }
 
+    // TODO: Try moving the allocation outside the augment function to be done just once.
     std::vector<TIndex> path(nc, -1);
     std::vector<TCost> shortestPathCosts(nc);
     std::fill(shortestPathCosts.begin(), shortestPathCosts.end(), INFINITY);
 
-    // TODO: Decide whether to take the allocation outside the augment function.
+    // TODO: Try moving the allocation outside the augment function to be done just once.
     std::vector<bool> SR(nr);
     std::vector<bool> SC(nc);
     std::fill(SR.begin(), SR.end(), false);
