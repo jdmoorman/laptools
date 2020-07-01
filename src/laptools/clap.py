@@ -1,52 +1,17 @@
 import numpy as np
-from scipy.optimize import linear_sum_assignment
 
+from _augment import _solve
+
+from . import lap
 from ._util import one_hot
-
-
-def cost(i, j, cost_matrix):
-    """Compute the minimal cost over all constrained assignments.
-    Parameters
-    ----------
-    i : int
-        Row index corresponding to the constraint.
-    j : int
-        Column index corresponding to the constraint.
-    cost_matrix : 2darray
-        A matrix of costs.
-    Returns
-    -------
-    float
-        The total cost of the linear assignment problem solution under the
-        constraint that row i is assigned to column j.
-    """
-    cost_matrix = np.array(cost_matrix)
-
-    if not np.isfinite(cost_matrix[i, j]):
-        return cost_matrix[i, j]
-
-    n_rows, n_cols = cost_matrix.shape
-
-    # Cost matrix omitting the row and column corresponding to the constraint.
-    sub_cost_matrix = cost_matrix[~one_hot(i, n_rows), :][:, ~one_hot(j, n_cols)]
-
-    # Lsap solution for the submatrix.
-    try:
-        sub_row_ind, sub_col_ind = linear_sum_assignment(sub_cost_matrix)
-    except ValueError as e:
-        if str(e) == "cost matrix is infeasible":
-            return np.inf
-        else:
-            raise e
-
-    # Total cost is that of the submatrix lsap plus the cost of the constraint.
-    return sub_cost_matrix[sub_row_ind, sub_col_ind].sum() + cost_matrix[i, j]
 
 
 def costs(cost_matrix):
     """Solve a constrained linear sum assignment problem for each entry.
+
     The output of this function is equivalent to, but significantly more
     efficient than,
+
     >>> def costs(cost_matrix):
     ...     total_costs = np.empty_like(cost_matrix)
     ...     num_rows, num_cols = cost_matrix.shape
@@ -54,10 +19,12 @@ def costs(cost_matrix):
     ...         for j in range(num_cols):
     ...             total_costs[i, j] = clap.cost(i, j, cost_matrix)
     ...     return total_costs
+
     Parameters
     ----------
     cost_matrix : 2darray
         A matrix of costs.
+
     Returns
     -------
     2darray
@@ -75,8 +42,9 @@ def costs(cost_matrix):
     # Find the best lsap assignment from rows to columns without constrains.
     # Since there are at least as many columns as rows, row_idxs should
     # be identical to np.arange(n_rows). We depend on this.
+    row_idxs = np.arange(n_rows)
     try:
-        row_idxs, lsap_col_idxs = linear_sum_assignment(cost_matrix)
+        row4col, col4row, u, v = _solve(cost_matrix)
     except ValueError as e:
         if str(e) == "cost matrix is infeasible":
             return np.full((n_rows, n_cols), np.inf)
@@ -84,7 +52,7 @@ def costs(cost_matrix):
             raise e
 
     # Column vector of costs of each assignment in the lsap solution.
-    lsap_costs = cost_matrix[row_idxs, lsap_col_idxs]
+    lsap_costs = cost_matrix[row_idxs, col4row]
     lsap_total_cost = lsap_costs.sum()
 
     # Find the two minimum-cost columns for each row
@@ -98,9 +66,9 @@ def costs(cost_matrix):
     # When a row has its column stolen by a constraint, these are the columns
     # that might come into play when we are forced to resolve the assignment.
     if n_rows < n_cols:
-        unused = np.setdiff1d(np.arange(n_cols), lsap_col_idxs)
+        unused = np.setdiff1d(np.arange(n_cols), col4row)
         first_unused = np.argmin(cost_matrix[:, unused], axis=1)
-        potential_cols = np.union1d(lsap_col_idxs, unused[first_unused])
+        potential_cols = np.union1d(col4row, unused[first_unused])
     else:
         potential_cols = np.arange(n_cols)
 
@@ -112,44 +80,47 @@ def costs(cost_matrix):
     # total assignment costs are:
     total_costs = lsap_total_cost - lsap_costs[:, None] + cost_matrix
 
-    for i, freed_j in enumerate(lsap_col_idxs):
-        # For each row, which column is it currently assigned to? Modify this
-        # as we go to enforce various constraints. Set the row i entry to -1
-        # to indicate that we are enforcing constraints on row i at the moment.
-        col_idxs = lsap_col_idxs.copy()
-        col_idxs[i] = -1  # Row i is having a constraint applied.
-
+    for i, freed_j in enumerate(col4row):
         # When row i is constrained to another column, can column j be
         # reassigned to improve the assignment cost of one of the other rows?
-        freed_col_costs = cost_matrix[:, freed_j]
-        if np.any(freed_col_costs < lsap_costs):
-            # Solve the lsap with row i omitted. For the majority of
-            # constraints on row i's assignment, this will not conflict with
-            # the constraint. When it does conflict, we fix the issue later.
-            sub_ind = ~one_hot(i, n_rows)
-            sub_cost_matrix = cost_matrix[sub_ind, :][:, lsap_col_idxs]
-            sub_row_ind, sub_col_ind = linear_sum_assignment(sub_cost_matrix)
-            sub_total_cost = sub_cost_matrix[sub_row_ind, sub_col_ind].sum()
-            col_idxs[sub_ind] = lsap_col_idxs[sub_col_ind]
+        # To deal with that, we solve the lsap with row i omitted. For the
+        # majority of constraints on row i's assignment, this will not conflict
+        # with the constraint. When it does conflict, we fix the issue later.
+        sub_ind = ~one_hot(i, n_rows)
+        sub_cost_matrix = cost_matrix[sub_ind, :]
 
-            # This calculation will end up being wrong for the columns in
-            # lsap_col_idxs[sub_col_ind]. This is because the constraint in
-            # row i in these columns will conflict with the sub assignment.
-            # These miscalculations are corrected later.
-            total_costs[i, :] = cost_matrix[i, :] + sub_total_cost
+        new_row4col, new_col4row, new_u, new_v = lap.solve_lsap_with_removed_row(
+            cost_matrix, i, row4col, col4row, u, v, modify_val=False
+        )
 
-        # col_idxs now contains the optimal assignment columns ignoring row i.
-        col_idxs[i] = np.setdiff1d(lsap_col_idxs, col_idxs)[0]
-        total_costs[i, col_idxs[i]] = cost_matrix[row_idxs, col_idxs].sum()
-        col_idxs[i] = -1
+        sub_total_cost = cost_matrix[sub_ind, new_col4row[sub_ind]].sum()
+        new_col4row[i] = -1  # Row i is having a constraint applied.
 
-        for other_i, stolen_j in enumerate(col_idxs):
+        # This calculation will end up being wrong for the columns in
+        # lsap_col_idxs[sub_col_ind]. This is because the constraint in
+        # row i in these columns will conflict with the sub assignment.
+        # These miscalculations are corrected later.
+        total_costs[i, :] = cost_matrix[i, :] + sub_total_cost
+
+        # new_col4row now contains the optimal assignment columns ignoring row i.
+        new_col4row[i] = np.setdiff1d(col4row, new_col4row)[0]
+        total_costs[i, new_col4row[i]] = cost_matrix[row_idxs, new_col4row].sum()
+
+        # When we solve the lsap with row i removed, we update row4col accordingly.
+        sub_row4col = new_row4col.copy()
+        sub_row4col[sub_row4col == i] = -1
+        sub_row4col[sub_row4col > i] -= 1
+
+        for other_i, stolen_j in enumerate(new_col4row):
             if other_i == i:
                 continue
 
+            if not np.isfinite(cost_matrix[i, stolen_j]):
+                total_costs[i, stolen_j] = cost_matrix[i, stolen_j]
+                continue
+
             # Row i steals column stolen_j from other_i because of constraint.
-            col_idxs[i] = stolen_j
-            col_idxs[other_i] = -1
+            new_col4row[i] = stolen_j
 
             # Row other_i must find a new column. What is its next best option?
             best_j, second_best_j, third_best_j = (
@@ -158,53 +129,58 @@ def costs(cost_matrix):
                 third_best_col_idxs[other_i],
             )
 
-            # TODO: Problem might occur if we have two j's that are both next best.
-            # However, one is not in col_idxs and the other is in col_idxs.
+            # Note: Problem might occur if we have two j's that are both next
+            # best, but one is not in col_idxs and the other is in col_idxs.
             # In this case, choosing the one not in col_idxs does not necessarily
             # give us the optimal assignment.
             # TODO: make the following if-else prettier.
 
             if (
                 best_j != stolen_j
-                and best_j not in col_idxs
+                and best_j not in new_col4row
                 and (
                     cost_matrix[other_i, best_j] != cost_matrix[other_i, second_best_j]
-                    or second_best_j not in col_idxs
+                    or second_best_j not in new_col4row
                 )
             ):
-                col_idxs[other_i] = best_j
-                total_costs[i, stolen_j] = cost_matrix[row_idxs, col_idxs].sum()
-            elif second_best_j not in col_idxs and (
+                new_col4row[other_i] = best_j
+                total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
+            elif second_best_j not in new_col4row and (
                 cost_matrix[other_i, second_best_j]
                 != cost_matrix[other_i, third_best_j]
-                or third_best_j not in col_idxs
+                or third_best_j not in new_col4row
             ):
-                col_idxs[other_i] = second_best_j
-                total_costs[i, stolen_j] = cost_matrix[row_idxs, col_idxs].sum()
+                new_col4row[other_i] = second_best_j
+                total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
             else:
-                sub_cost_matrix = cost_matrix[:, potential_cols]
-                sub_j = np.argwhere(potential_cols == stolen_j)[0]
-                total_cost = cost(i, sub_j, sub_cost_matrix)
-                total_costs[i, stolen_j] = total_cost
+                # Otherwise, solve the lsap with stolen_j removed
+                sub_sub_cost_matrix = sub_cost_matrix[:, potential_cols]
+                sub_j = np.argwhere(potential_cols == stolen_j)[0][0]
+                sub_new_col4row = new_col4row[sub_ind]
+                sub_new_col4row = np.where(
+                    sub_new_col4row.reshape(sub_new_col4row.size, 1) == potential_cols
+                )[1]
 
-            # next_best_j = best_j if (best_j != stolen_j) else second_best_j
+                _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
+                    sub_sub_cost_matrix,
+                    sub_j,
+                    sub_row4col[potential_cols],
+                    sub_new_col4row,
+                    new_u[sub_ind],  # dual variable associated with rows
+                    new_v[potential_cols],  # dual variable associated with cols
+                    modify_val=False,
+                )
 
-            # Is the next best option available? If so, use it. Otherwise,
-            # solve the constrained lsap from scratch.
-            # if next_best_j not in col_idxs:
-            #     col_idxs[other_i] = next_best_j
-            #     total_costs[i, stolen_j] = cost_matrix[row_idxs, col_idxs].sum()
-            # else:
-            #     sub_cost_matrix = cost_matrix[:, potential_cols]
-            #     sub_j = np.argwhere(potential_cols == stolen_j)[0]
-            #     total_cost = cost(i, sub_j, sub_cost_matrix)
-            #     total_costs[i, stolen_j] = total_cost
+                total_costs[i, stolen_j] = (
+                    cost_matrix[i, stolen_j]
+                    + sub_sub_cost_matrix[np.arange(n_rows - 1), new_new_col4row].sum()
+                )
 
             # Give other_i its column back in preparation for the next round.
-            col_idxs[other_i] = stolen_j
-            col_idxs[i] = -1
+            new_col4row[other_i] = stolen_j
+            new_col4row[i] = -1
 
     # For those constraints which are compatible with the unconstrained lsap:
-    total_costs[row_idxs, lsap_col_idxs] = lsap_total_cost
+    total_costs[row_idxs, col4row] = lsap_total_cost
 
     return total_costs

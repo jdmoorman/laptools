@@ -10,7 +10,7 @@ from scipy.sparse.sputils import matrix
 
 # from laptools import lap
 import laptools
-from laptools import lap_cpp
+from laptools import lap
 
 
 # fmt: off
@@ -57,12 +57,12 @@ def test_linear_sum_assignment():
             cost_matrix = sign * np.array(cost_matrix)
             expected_cost = sign * np.array(expected_cost)
 
-            row_ind, col_ind = lap_cpp.solve(cost_matrix, maximize=maximize)
+            row_ind, col_ind = lap.solve(cost_matrix, maximize=maximize)
             assert_array_equal(row_ind, np.sort(row_ind))
             assert_array_equal(expected_cost, cost_matrix[row_ind, col_ind])
 
             cost_matrix = cost_matrix.T
-            row_ind, col_ind = lap_cpp.solve(cost_matrix, maximize=maximize)
+            row_ind, col_ind = lap.solve(cost_matrix, maximize=maximize)
             assert_array_equal(row_ind, np.sort(row_ind))
             assert_array_equal(np.sort(expected_cost),
                                np.sort(cost_matrix[row_ind, col_ind]))
@@ -70,29 +70,29 @@ def test_linear_sum_assignment():
 
 def test_linear_sum_assignment_input_validation():
     # Since the input should be a 2D array.
-    assert_raises(ValueError, lap_cpp.solve, [1, 2, 3])
+    assert_raises(ValueError, lap.solve, [1, 2, 3])
 
     cost_matrix = [[1, 2, 3], [4, 5, 6]]
-    assert_array_equal(lap_cpp.solve(cost_matrix),
-                       lap_cpp.solve(np.asarray(cost_matrix)))
-    assert_array_equal(lap_cpp.solve(cost_matrix),
-                       lap_cpp.solve(matrix(cost_matrix)))
+    assert_array_equal(lap.solve(cost_matrix),
+                       lap.solve(np.asarray(cost_matrix)))
+    assert_array_equal(lap.solve(cost_matrix),
+                       lap.solve(matrix(cost_matrix)))
 
     eye = np.identity(3)
-    assert_array_equal(lap_cpp.solve(eye.astype(np.bool)),
-                       lap_cpp.solve(eye))
-    assert_raises(ValueError, lap_cpp.solve, eye.astype(str))
+    assert_array_equal(lap.solve(eye.astype(np.bool)),
+                       lap.solve(eye))
+    assert_raises(ValueError, lap.solve, eye.astype(str))
 
     eye[0][0] = np.nan
-    assert_raises(ValueError, lap_cpp.solve, eye)
+    assert_raises(ValueError, lap.solve, eye)
 
     eye = np.identity(3)
     eye[1][1] = -np.inf
-    assert_raises(ValueError, lap_cpp.solve, eye)
+    assert_raises(ValueError, lap.solve, eye)
 
     eye = np.identity(3)
     eye[:, 0] = np.inf
-    assert_raises(ValueError, lap_cpp.solve, eye)
+    assert_raises(ValueError, lap.solve, eye)
 
     # Note that solve requires that num_rows cannot exceed num_cols
     cost_matrix = np.array([[0     , np.inf, np.inf],
@@ -108,7 +108,7 @@ def test_linear_sum_assignment_against_scipy():
     for i in range(100):
         cost_matrix = np.random.rand(5, 10)
 
-        row_ind_1, col_ind_1 = lap_cpp.solve(cost_matrix)
+        row_ind_1, col_ind_1 = lap.solve(cost_matrix)
         row_ind_2, col_ind_2 = linear_sum_assignment(cost_matrix)
 
         assert_array_equal(row_ind_1, row_ind_2)
@@ -116,7 +116,7 @@ def test_linear_sum_assignment_against_scipy():
 
         cost_matrix = cost_matrix.T
 
-        row_ind_1, col_ind_1 = lap_cpp.solve(cost_matrix)
+        row_ind_1, col_ind_1 = lap.solve(cost_matrix)
         row_ind_2, col_ind_2 = linear_sum_assignment(cost_matrix)
 
         assert_array_equal(row_ind_1, row_ind_2)
