@@ -12,19 +12,18 @@ from utils import (
 
 def get_solvers():
     from lapjv import lapjv as lapjv_lap
-    from lapjv_noinit import lapjv as lapjv_noinit_lap
+
+    # from lapjv_noinit import lapjv as lapjv_noinit_lap
     from lapsolver import solve_dense
     from scipy.optimize import linear_sum_assignment as scipy_lap
     from laptools.lap import solve as laptools_lap
-    from laptools.lap_cpp import solve as laptools_cpp_lap
 
     return {
         "scipy": scipy_lap,
         "lapjv": lapjv_lap,
-        "lapjv_noinit": lapjv_noinit_lap,
+        # "lapjv_noinit": lapjv_noinit_lap,
         "lapsolver": solve_dense,
-        # "laptools": laptools_lap,
-        "laptools_cpp": laptools_cpp_lap,
+        "laptools": laptools_lap,
     }
 
 
