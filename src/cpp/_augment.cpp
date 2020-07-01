@@ -208,7 +208,7 @@ void def_augment(py::module m) {
         R"pbdoc(
             TODO: Docstring.
         )pbdoc",
-        py::arg("cost_matrix").noconvert(),
+        py::arg("cost_matrix"),
         py::arg("cur_row").noconvert(),
         py::arg("row4col").noconvert(),
         py::arg("col4row").noconvert(),
