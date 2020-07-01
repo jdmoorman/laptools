@@ -8,6 +8,8 @@ from pytest import raises as assert_raises
 from scipy.optimize import linear_sum_assignment
 from scipy.sparse.sputils import matrix
 
+# from laptools import lap
+import laptools
 from laptools import lap
 
 
@@ -55,14 +57,12 @@ def test_linear_sum_assignment():
             cost_matrix = sign * np.array(cost_matrix)
             expected_cost = sign * np.array(expected_cost)
 
-            row_ind, col_ind = lap.solve(cost_matrix,
-                                         maximize=maximize)
+            row_ind, col_ind = lap.solve(cost_matrix, maximize=maximize)
             assert_array_equal(row_ind, np.sort(row_ind))
             assert_array_equal(expected_cost, cost_matrix[row_ind, col_ind])
 
             cost_matrix = cost_matrix.T
-            row_ind, col_ind = lap.solve(cost_matrix,
-                                         maximize=maximize)
+            row_ind, col_ind = lap.solve(cost_matrix, maximize=maximize)
             assert_array_equal(row_ind, np.sort(row_ind))
             assert_array_equal(np.sort(expected_cost),
                                np.sort(cost_matrix[row_ind, col_ind]))
@@ -99,7 +99,7 @@ def test_linear_sum_assignment_input_validation():
                             [np.inf,      0, np.inf],
                             [np.inf, np.inf,      0],
                             [0     ,      0,      0]])
-    assert_raises(ValueError, lap._solve, cost_matrix)
+    assert_raises(ValueError, laptools._solve, cost_matrix)
 
 # fmt: on
 

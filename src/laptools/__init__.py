@@ -7,10 +7,11 @@ __version__ = "0.1.8"
 __author__ = "Jacob Moorman"
 __email__ = "jacob@moorman.me"
 
-__license__ = "MIT license".rstrip(" license")
+__license__ = "MIT"
 __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 
+from _augment import _solve
 
-from . import clap, clap_new, lap
+from . import clap, lap
 
-__all__ = ["clap", "lap"]
+__all__ = ["clap", "lap", "_solve"]

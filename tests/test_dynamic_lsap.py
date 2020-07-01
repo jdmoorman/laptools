@@ -21,6 +21,8 @@ def test_solve_lsap_with_removed_row():
         # Note that here we set all costs to integer values, which might
         # lead to existence of multiple solutions.
         cost_matrix = np.random.randint(10, size=(num_rows, num_cols))
+        cost_matrix = cost_matrix.astype(np.double)
+
         removed_row = random.randint(0, num_rows - 1)
         row_idx_1, col_idx_1 = linear_sum_assignment(cost_matrix)
 
@@ -57,6 +59,8 @@ def test_solve_lsap_with_removed_col():
 
     for i in range(num_rounds):
         cost_matrix = np.random.randint(10, size=(num_rows, num_cols))
+        cost_matrix = cost_matrix.astype(np.double)
+
         row_idx_1, col_idx_1 = linear_sum_assignment(cost_matrix)
         # Note that here we specifically pick a column that appears in the
         # previous optimal assignment.
