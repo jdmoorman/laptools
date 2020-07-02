@@ -161,20 +161,24 @@ def costs(cost_matrix):
                     sub_new_col4row.reshape(sub_new_col4row.size, 1) == potential_cols
                 )[1]
 
-                _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
-                    sub_sub_cost_matrix,
-                    sub_j,
-                    sub_row4col[potential_cols],
-                    sub_new_col4row,
-                    new_u[sub_ind],  # dual variable associated with rows
-                    new_v[potential_cols],  # dual variable associated with cols
-                    modify_val=False,
-                )
-
-                total_costs[i, stolen_j] = (
-                    cost_matrix[i, stolen_j]
-                    + sub_sub_cost_matrix[np.arange(n_rows - 1), new_new_col4row].sum()
-                )
+                try:
+                    _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
+                        sub_sub_cost_matrix,
+                        sub_j,
+                        sub_row4col[potential_cols],
+                        sub_new_col4row,
+                        new_u[sub_ind],  # dual variable associated with rows
+                        new_v[potential_cols],  # dual variable associated with cols
+                        modify_val=False,
+                    )
+                    total_costs[i, stolen_j] = (
+                        cost_matrix[i, stolen_j]
+                        + sub_sub_cost_matrix[
+                            np.arange(n_rows - 1), new_new_col4row
+                        ].sum()
+                    )
+                except ValueError:
+                    total_costs[i, stolen_j] = np.inf
 
             # Give other_i its column back in preparation for the next round.
             new_col4row[other_i] = stolen_j

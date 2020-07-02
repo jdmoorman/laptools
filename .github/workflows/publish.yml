@@ -20,7 +20,7 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
     - name: Build Package
       run: |
-        python setup.py sdist bdist_wheel
+        python setup.py sdist
     - name: "List result"
       run: |
         ls -l dist
