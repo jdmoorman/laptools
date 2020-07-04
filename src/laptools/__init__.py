@@ -11,7 +11,8 @@ __license__ = "MIT"
 __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 
 from _augment import _solve
+from py_lapjv import augment, lapjv
 
 from . import clap, lap
 
-__all__ = ["clap", "lap", "_solve"]
+__all__ = ["clap", "lap", "_solve", "lapjv", "augment"]

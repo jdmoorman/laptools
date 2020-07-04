@@ -3,11 +3,19 @@
 
 """The setup script."""
 
+import platform
 import sys
 
+import numpy
 import setuptools
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
+
+CXX_ARGS = {
+    "Darwin": ["-std=c++11", "-march=native", "-ftree-vectorize"],
+    "Linux": ["-fopenmp", "-std=c++11", "-march=native", "-ftree-vectorize"],
+    "Windows": ["/openmp", "/std:c++latest", "/arch:AVX2"],
+}
 
 with open("README.md") as readme_file:
     readme = readme_file.read()
@@ -182,6 +190,13 @@ setup(
                 ["src/cpp/_augment.cpp"]
             ),  # Sort input source files to ensure bit-for-bit reproducible builds
             include_dirs=[get_pybind_include()],  # Path to pybind11 headers
+            language="c++",
+        ),
+        Extension(
+            "py_lapjv",
+            sources=["src/cpp/py_lapjv.cc"],
+            extra_compile_args=CXX_ARGS[platform.system()],
+            include_dirs=[numpy.get_include()],
             language="c++",
         ),
     ],
