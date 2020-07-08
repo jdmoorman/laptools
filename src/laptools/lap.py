@@ -1,6 +1,8 @@
 import numpy as np
 
 from _augment import _solve, augment
+from py_lapjv import augment as lapjv_augment
+from py_lapjv import lapjv
 
 
 def solve(cost_matrix, maximize=False):
@@ -50,7 +52,7 @@ def solve(cost_matrix, maximize=False):
     # If the cost_matrix has more rows than columns
     if cost_matrix.shape[1] < cost_matrix.shape[0]:
         # Here, col4row holds the rows in cost_matrix that are in the assignment
-        _, col4row, _, _ = _solve(cost_matrix.T)
+        col4row, _, _ = lapjv(cost_matrix.T)
 
         # Sort the row indexes in the assignment
         idx_sorted = np.argsort(col4row)
@@ -58,7 +60,7 @@ def solve(cost_matrix, maximize=False):
         return (col4row[idx_sorted], a[idx_sorted])
     # If the cost_matrix has more columns than rows
     else:
-        _, col4row, _, _ = _solve(cost_matrix)
+        col4row, _, _ = lapjv(cost_matrix)
         return (a, col4row)
 
 
@@ -182,6 +184,6 @@ def solve_lsap_with_removed_col(
     row4col[col_removed] = -1
 
     # Perform another augmenting step
-    augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
+    lapjv_augment(cost_matrix_copy, row_freed, col4row, row4col, v)
 
     return row4col, col4row, u, v
