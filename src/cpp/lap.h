@@ -22,7 +22,7 @@ void augment(idx freerow, int nr, int nc, const cost *restrict assign_cost,
 {
   idx endofpath;
   if (verbose) {
-    printf("lapjv: AUGMENT SOLUTION row [%d / %d]\n", freerow, nr);
+    printf("lapjv: AUGMENT SOLUTION row [%lld / %d]\n", freerow, nr);
   }
 
   auto d = std::unique_ptr<cost[]>(new cost[nc]);  // 'cost-distance' in augmenting path calculation.
@@ -77,6 +77,10 @@ void augment(idx freerow, int nr, int nc, const cost *restrict assign_cost,
           break;
         }
       }
+    }
+
+    if (min == INFINITY){
+      throw "cost matrix is infeasible";
     }
 
     if (!unassigned_found) {
@@ -215,7 +219,13 @@ void lap(int nr, int nc, const cost *restrict assign_cost,
   // AUGMENT SOLUTION for each free row.
   for (idx freerow = 0; freerow < nr; freerow++) {
 
-    augment(freerow, nr, nc, assign_cost, rowsol, colsol, v, verbose);
+    try {
+      augment(freerow, nr, nc, assign_cost, rowsol, colsol, v, verbose);
+    }
+    catch (char const* e){
+      std::cout << e << std::endl;
+      throw;
+    }
 
     if (verbose) {
       std::cout << "v:  ";

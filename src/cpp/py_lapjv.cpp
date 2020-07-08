@@ -1,3 +1,25 @@
+// The MIT License (MIT)
+//
+// Copyright (c) 2016 source{d}, 2020 Qinyi Chen.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include <functional>
 #include <memory>
 #include <Python.h>
@@ -5,6 +27,7 @@
 #include <numpy/arrayobject.h>
 #include "lap.h"
 #include <iostream>
+#include <cstdint>
 
 static char module_docstring[] =
     "This module wraps LAPJV - Jonker-Volgenant linear sum assignment algorithm.";
@@ -55,7 +78,10 @@ template <typename O>
 class _pyobj : public pyobj_parent<O> {
  public:
   _pyobj() : pyobj_parent<O>(
-      nullptr, [](O *p){ if (p) Py_DECREF(p); }) {}
+      nullptr,
+      [](O *p)
+        { if (p) Py_DECREF(p); }
+  ) {}
   explicit _pyobj(PyObject *ptr) : pyobj_parent<O>(
       reinterpret_cast<O *>(ptr), [](O *p){ if(p) Py_DECREF(p); }) {}
   void reset(PyObject *p) noexcept {
@@ -80,21 +106,33 @@ static PyObject *py_lapjv(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   // TODO: Can we accept ints?
   pyarray cost_matrix_array;
-  bool float32 = true;
+  // bool float32 = true;
+  // cost_matrix_array.reset(PyArray_FROM_OTF(
+  //     cost_matrix_obj, NPY_FLOAT32,
+  //     NPY_ARRAY_IN_ARRAY | (force_doubles? 0 : NPY_ARRAY_FORCECAST)));
+  // if (!cost_matrix_array) {
+  //   PyErr_Clear();
+  //   float32 = false;
+  //   cost_matrix_array.reset(PyArray_FROM_OTF(
+  //       cost_matrix_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY));
+  //   if (!cost_matrix_array) {
+  //     PyErr_SetString(PyExc_ValueError, "\"cost_matrix\" must be a numpy array "
+  //                                       "of float32 or float64 dtype");
+  //     return NULL;
+  //   }
+  // }
+
+  // Note: we only use float64 and int64 as the default datatypes for now
+  // TODO: allow more datatypes
+  bool float32 = false;
   cost_matrix_array.reset(PyArray_FROM_OTF(
-      cost_matrix_obj, NPY_FLOAT32,
-      NPY_ARRAY_IN_ARRAY | (force_doubles? 0 : NPY_ARRAY_FORCECAST)));
+      cost_matrix_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY | NPY_ARRAY_FORCECAST));
   if (!cost_matrix_array) {
-    PyErr_Clear();
-    float32 = false;
-    cost_matrix_array.reset(PyArray_FROM_OTF(
-        cost_matrix_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY));
-    if (!cost_matrix_array) {
       PyErr_SetString(PyExc_ValueError, "\"cost_matrix\" must be a numpy array "
-                                        "of float32 or float64 dtype");
+                                        "of float64 dtype");
       return NULL;
-    }
   }
+
   auto ndims = PyArray_NDIM(cost_matrix_array.get());
   if (ndims != 2) {
     PyErr_SetString(PyExc_ValueError,
@@ -112,40 +150,41 @@ static PyObject *py_lapjv(PyObject *self, PyObject *args, PyObject *kwargs) {
   int nr = dims[0];
   int nc = dims[1];
   // TODO: Make it work for cases when nc >= nr
-  if (nr <= 0 || nc <= 0) {
+  if (nr < 0 || nc < 0) {
     PyErr_SetString(PyExc_ValueError,
-                    "\"cost_matrix\"'s shape is invalid or too large");
+                    "cost_matrix's shape is invalid or too large");
     return NULL;
   }
   auto cost_matrix = PyArray_DATA(cost_matrix_array.get());
   npy_intp row_dims[] = {nr, 0};
   npy_intp col_dims[] = {nc, 0};
-  pyarray row_ind_array(PyArray_SimpleNew(1, row_dims, NPY_INT));
-  pyarray col_ind_array(PyArray_SimpleNew(1, col_dims, NPY_INT));
-  auto row_ind = reinterpret_cast<int*>(PyArray_DATA(row_ind_array.get()));
-  auto col_ind = reinterpret_cast<int*>(PyArray_DATA(col_ind_array.get()));
+  pyarray row_ind_array(PyArray_SimpleNew(1, row_dims, NPY_INT64));
+  pyarray col_ind_array(PyArray_SimpleNew(1, col_dims, NPY_INT64));
+  auto row_ind = reinterpret_cast<int64_t*>(PyArray_DATA(row_ind_array.get()));
+  auto col_ind = reinterpret_cast<int64_t*>(PyArray_DATA(col_ind_array.get()));
   // pyarray u_array(PyArray_SimpleNew(
   //     1, row_dims, float32? NPY_FLOAT32 : NPY_FLOAT64));
   pyarray v_array(PyArray_SimpleNew(
       1, col_dims, float32? NPY_FLOAT32 : NPY_FLOAT64));
-  // double lapcost;
-  if (float32) {
-    // auto u = reinterpret_cast<float*>(PyArray_DATA(u_array.get()));
-    auto v = reinterpret_cast<float*>(PyArray_DATA(v_array.get()));
-    Py_BEGIN_ALLOW_THREADS
-    lap(nr, nc, reinterpret_cast<float*>(cost_matrix),
+
+  // auto u = reinterpret_cast<double*>(PyArray_DATA(u_array.get()));
+  auto v = reinterpret_cast<double*>(PyArray_DATA(v_array.get()));
+  Py_BEGIN_ALLOW_THREADS
+  try {
+    lap(nr, nc,
+        reinterpret_cast<double*>(cost_matrix),
         row_ind, col_ind, v, verbose);
-    Py_END_ALLOW_THREADS
-  } else {
-    // auto u = reinterpret_cast<double*>(PyArray_DATA(u_array.get()));
-    auto v = reinterpret_cast<double*>(PyArray_DATA(v_array.get()));
-    Py_BEGIN_ALLOW_THREADS
-    lap(nr, nc, reinterpret_cast<double*>(cost_matrix),
-        row_ind, col_ind, v, verbose);
-    Py_END_ALLOW_THREADS
   }
+  catch (char const* e){
+    std::cout << "Caught error " << e << " in py_lapjv" << std::endl;
+    PyErr_SetString(PyExc_ValueError, "cost matrix is infeasible");
+    std::cout << "The issue is not with PyErr" << std::endl;
+    return NULL;
+  }
+  Py_END_ALLOW_THREADS
   return Py_BuildValue("(OOO)",
-                       row_ind_array.get(), col_ind_array.get(), v_array.get());
+                       row_ind_array.get(), col_ind_array.get(),
+                       v_array.get());
 }
 
 
@@ -153,44 +192,37 @@ static PyObject *py_lapjv(PyObject *self, PyObject *args, PyObject *kwargs) {
 static PyObject *py_augment(PyObject *self, PyObject *args, PyObject *kwargs) {
   PyObject *cost_matrix_obj;
   PyObject *col4row_obj, *row4col_obj, *v_obj;
-  int freerow = 0;
+  int64_t freerow = 0;
   int verbose = 0;
   int force_doubles = 0;
   static const char *kwlist[] = {
       "cost_matrix", "freerow", "col4row", "row4col", "v",
       "verbose", "force_doubles", NULL};
   if (!PyArg_ParseTupleAndKeywords(
-      args, kwargs, "ObOOO|pb", const_cast<char**>(kwlist),
+      args, kwargs, "OLOOO|pb", const_cast<char**>(kwlist),
       &cost_matrix_obj, &freerow, &col4row_obj, &row4col_obj, &v_obj,
       &verbose, &force_doubles)) {
     return NULL;
   }
   pyarray cost_matrix_array;
-  bool float32 = true;
-  cost_matrix_array.reset(PyArray_FROM_OTF(
-      cost_matrix_obj, NPY_FLOAT32,
-      NPY_ARRAY_IN_ARRAY | (force_doubles? 0 : NPY_ARRAY_FORCECAST)));
+  // bool float32 = true;
+  cost_matrix_array.reset(PyArray_FROM_OTF(cost_matrix_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY));
+  // cost_matrix_array.reset(PyArray_FROM_OTF(
+  //     cost_matrix_obj, NPY_FLOAT32,
+  //     NPY_ARRAY_IN_ARRAY | (force_doubles? 0 : NPY_ARRAY_FORCECAST)));
+  // if (!cost_matrix_array) {
+  //   PyErr_Clear();
+  //   float32 = false;
+  //   cost_matrix_array.reset(PyArray_FROM_OTF(
+  //       cost_matrix_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY));
   if (!cost_matrix_array) {
-    PyErr_Clear();
-    float32 = false;
-    cost_matrix_array.reset(PyArray_FROM_OTF(
-        cost_matrix_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY));
-    if (!cost_matrix_array) {
-      PyErr_SetString(PyExc_ValueError, "\"cost_matrix\" must be a numpy array "
-                                        "of float32 or float64 dtype");
-      return NULL;
-    }
-  }
-
-  if (float32){
-    std::cout << "The datatype of the cost matrix is float32." << std::endl;
-  } else {
-    std::cout << "The datatype of the cost matrix is float64." << std::endl;
+    PyErr_SetString(PyExc_ValueError, "\"cost_matrix\" must be a numpy array "
+                                      "of float64 dtype");
+    return NULL;
   }
 
   pyarray col4row_array;
-  col4row_array.reset(PyArray_FROM_OTF(
-      col4row_obj, NPY_INT, NPY_ARRAY_IN_ARRAY | NPY_ARRAY_FORCECAST));
+  col4row_array.reset(PyArray_FROM_OT(col4row_obj, NPY_INT64));
   if (!col4row_array) {
     // TODO: Do we need to set the python error string here?
     // PyErr_SetString(PyExc_ValueError, "\"col4row\" must be a numpy array "
@@ -199,8 +231,7 @@ static PyObject *py_augment(PyObject *self, PyObject *args, PyObject *kwargs) {
   }
 
   pyarray row4col_array;
-  row4col_array.reset(PyArray_FROM_OTF(
-      row4col_obj, NPY_INT, NPY_ARRAY_IN_ARRAY | NPY_ARRAY_FORCECAST));
+  row4col_array.reset(PyArray_FROM_OT(row4col_obj, NPY_INT64));
   if (!row4col_array) {
     // TODO: Do we need to set the python error string here?
     // PyErr_SetString(PyExc_ValueError, "\"row4col\" must be a numpy array "
@@ -225,16 +256,10 @@ static PyObject *py_augment(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   // TODO: Verify that v is never copied but rather modified inplace.
   pyarray v_array;
-  if (float32) {
-    v_array.reset(PyArray_FROM_OTF(
-        v_obj, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY | NPY_ARRAY_FORCECAST));
-  } else {
-    v_array.reset(PyArray_FROM_OTF(
-        v_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY | NPY_ARRAY_FORCECAST));
-  }
+  v_array.reset(PyArray_FROM_OT(v_obj, NPY_FLOAT64));
   if (!v_array) {
-    PyErr_SetString(PyExc_ValueError, "\"v\" must be a numpy array "
-                                      "of float32 or float64 dtype");
+    // PyErr_SetString(PyExc_ValueError, "\"v\" must be a numpy array "
+    //                                   "of float32 or float64 dtype");
     return NULL;
   }
 
@@ -252,30 +277,19 @@ static PyObject *py_augment(PyObject *self, PyObject *args, PyObject *kwargs) {
     return NULL;
   }
   auto cost_matrix = PyArray_DATA(cost_matrix_array.get());
-  auto col4row = reinterpret_cast<int*>(PyArray_DATA(col4row_array.get()));
-  auto row4col = reinterpret_cast<int*>(PyArray_DATA(row4col_array.get()));
+  auto col4row = reinterpret_cast<int64_t*>(PyArray_DATA(col4row_array.get()));
+  auto row4col = reinterpret_cast<int64_t*>(PyArray_DATA(row4col_array.get()));
   // auto u = PyArray_DATA(u_array.get());
   auto v = PyArray_DATA(v_array.get());
 
-  if (float32) {
-    Py_BEGIN_ALLOW_THREADS
-    augment(freerow, nr, nc,
-            reinterpret_cast<float*>(cost_matrix),
-            col4row,
-            row4col,
-            reinterpret_cast<float*>(v),
-            verbose);
-    Py_END_ALLOW_THREADS
-  } else {
-    Py_BEGIN_ALLOW_THREADS
-    augment(freerow, nr, nc,
-            reinterpret_cast<double*>(cost_matrix),
-            col4row,
-            row4col,
-            reinterpret_cast<double*>(v),
-            verbose);
-    Py_END_ALLOW_THREADS
-  }
+  Py_BEGIN_ALLOW_THREADS
+  augment(freerow, nr, nc,
+          reinterpret_cast<double*>(cost_matrix),
+          col4row,
+          row4col,
+          reinterpret_cast<double*>(v),
+          verbose);
+  Py_END_ALLOW_THREADS
 
   for (int i = 0; i < nr; i++){
     std::cout << col4row[i] << std::endl;
