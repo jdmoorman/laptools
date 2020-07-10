@@ -88,19 +88,11 @@ def solve_lsap_with_removed_row(
     modify_val : bool, optional
         A flag that indicates whether variables are modified in place.
     """
-    # cost_matrix = np.array(cost_matrix)
     n_rows, n_cols = cost_matrix.shape
 
     # Copy the variables if they are not modified in place.
     if not modify_val:
         row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
-
-    # If the freed up column does not contribute to lowering the costs of any
-    # other rows, simply return the current assignments.
-    freed_col = col4row[row_removed]
-    freed_col_costs = cost_matrix[:, freed_col]
-    if np.all(freed_col_costs >= cost_matrix[np.arange(n_rows), col4row]):
-        return row4col, col4row, u, v
 
     # Update the cost matrix to reflect the row removal.
     # Create a copy of the cost matrix and update all costs associated with
