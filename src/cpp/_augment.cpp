@@ -77,8 +77,8 @@ augment(py::array_t<TCost> cost_matrix,
     for (TIndex it = 0; it < nc; it++) {
         // Filling this up in reverse order ensures that the solution of a
         // constant cost matrix is the identity matrix (c.f. #11602).
-        remaining[it] = nc - it - 1;
-        // remaining[it] = it;
+        // remaining[it] = nc - it - 1;
+        remaining[it] = it;
     }
 
     // TODO: Try moving the allocation outside the augment function to be done just once.

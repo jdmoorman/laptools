@@ -111,10 +111,10 @@ def costs(cost_matrix):
             total_costs[i, :] = cost_matrix[i, :] + sub_total_cost
         else:
             new_row4col, new_col4row, new_u, new_v = (
-                row4col.copy(),
+                row4col,
                 col4row.copy(),
-                u.copy(),
-                v.copy(),
+                u,
+                v,
             )
 
         new_col4row[i] = -1  # Row i is having a constraint applied.
@@ -123,7 +123,7 @@ def costs(cost_matrix):
 
         # TODO: np.setdiff1d is very expensive.
         # new_col4row[i] = np.setdiff1d(col4row, new_col4row, assume_unique=True)[0]
-        new_col4row[i] = col4row[~np.isin(col4row, new_col4row)][0]
+        new_col4row[i] = set(col4row).difference(set(new_col4row)).pop()
         total_costs[i, new_col4row[i]] = cost_matrix[row_idxs, new_col4row].sum()
 
         for other_i, stolen_j in enumerate(new_col4row):
@@ -150,20 +150,16 @@ def costs(cost_matrix):
             # give us the optimal assignment.
             # TODO: make the following if-else prettier.
 
-            if (
-                best_j != stolen_j
-                and best_j not in new_col4row
-                and (
-                    cost_matrix[other_i, best_j] != cost_matrix[other_i, second_best_j]
-                    or second_best_j not in new_col4row
-                )
+            if best_j not in new_col4row and (
+                second_best_j not in new_col4row
+                or cost_matrix[other_i, best_j] != cost_matrix[other_i, second_best_j]
             ):
                 new_col4row[other_i] = best_j
                 total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
             elif second_best_j not in new_col4row and (
-                cost_matrix[other_i, second_best_j]
+                third_best_j not in new_col4row
+                or cost_matrix[other_i, second_best_j]
                 != cost_matrix[other_i, third_best_j]
-                or third_best_j not in new_col4row
             ):
                 new_col4row[other_i] = second_best_j
                 total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
@@ -176,6 +172,7 @@ def costs(cost_matrix):
                     sub_new_col4row.reshape(sub_new_col4row.size, 1) == potential_cols
                 )[1]
 
+                # TODO: preferably this should only be done once.
                 # When we solve the lsap with row i removed, we update row4col accordingly.
                 sub_row4col = new_row4col.copy()
                 sub_row4col[sub_row4col == i] = -1
