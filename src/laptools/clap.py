@@ -126,6 +126,12 @@ def costs(cost_matrix):
         new_col4row[i] = set(col4row).difference(set(new_col4row)).pop()
         total_costs[i, new_col4row[i]] = cost_matrix[row_idxs, new_col4row].sum()
 
+        flag_removed_col = False  # A flag that indicates whether
+        # solve_lsap_with_removed_col has been called.
+        sub_sub_cost_matrix = None
+        sub_new_col4row = None
+        sub_row4col = None
+
         for other_i, stolen_j in enumerate(new_col4row):
             if other_i == i:
                 continue
@@ -164,28 +170,41 @@ def costs(cost_matrix):
                 new_col4row[other_i] = second_best_j
                 total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
             else:
-                # Otherwise, solve the lsap with stolen_j removed
-                sub_sub_cost_matrix = cost_matrix[sub_ind, :][:, potential_cols]
-                sub_j = np.argwhere(potential_cols == stolen_j)[0][0]
-                sub_new_col4row = new_col4row[sub_ind]
-                sub_new_col4row = np.where(
-                    sub_new_col4row.reshape(sub_new_col4row.size, 1) == potential_cols
-                )[1]
+                # If this is the first time solve_lsap_with_removed_col is called
+                # we initialize a bunch of variables
+                if not flag_removed_col:
+                    # Otherwise, solve the lsap with stolen_j removed
+                    sub_sub_cost_matrix = cost_matrix[sub_ind, :][:, potential_cols]
 
-                # TODO: preferably this should only be done once.
-                # When we solve the lsap with row i removed, we update row4col accordingly.
-                sub_row4col = new_row4col.copy()
-                sub_row4col[sub_row4col == i] = -1
-                sub_row4col[sub_row4col > i] -= 1
+                    sub_j = list(potential_cols).index(stolen_j)
+
+                    sub_new_col4row = new_col4row[sub_ind]
+                    sub_new_col4row = np.where(
+                        sub_new_col4row.reshape(sub_new_col4row.size, 1)
+                        == potential_cols
+                    )[1]
+
+                    # When we solve the lsap with row i removed, we update row4col accordingly.
+                    sub_row4col = new_row4col.copy()
+                    sub_row4col[sub_row4col == i] = -1
+                    sub_row4col[sub_row4col > i] -= 1
+                    sub_sub_row4col = sub_row4col[potential_cols]
+
+                    sub_new_u = new_u[sub_ind]
+                    sub_new_v = new_v[potential_cols]
+
+                    flag_removed_col = True
+                else:
+                    sub_j = list(potential_cols).index(stolen_j)
 
                 try:
                     _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
                         sub_sub_cost_matrix,
                         sub_j,
-                        sub_row4col[potential_cols],
+                        sub_sub_row4col,
                         sub_new_col4row,
-                        new_u[sub_ind],  # dual variable associated with rows
-                        new_v[potential_cols],  # dual variable associated with cols
+                        sub_new_u,  # dual variable associated with rows
+                        sub_new_v,  # dual variable associated with cols
                         modify_val=False,
                     )
                     total_costs[i, stolen_j] = (
