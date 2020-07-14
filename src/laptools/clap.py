@@ -1,6 +1,6 @@
 import numpy as np
 
-from _augment import _solve
+from py_lapjv import lapjv
 
 from . import lap
 from ._util import one_hot
@@ -43,7 +43,7 @@ def costs(cost_matrix):
     # be identical to np.arange(n_rows). We depend on this.
     row_idxs = np.arange(n_rows)
     try:
-        row4col, col4row, u, v = _solve(cost_matrix)
+        col4row, row4col, v = lapjv(cost_matrix)
     except ValueError as e:
         if str(e) == "cost matrix is infeasible":
             return np.full((n_rows, n_cols), np.inf)
@@ -98,8 +98,8 @@ def costs(cost_matrix):
         # other rows, simply use the current assignments.
         if np.any(freed_col_costs < lsap_costs):
             # Need to solve the subproblem in which one row is removed
-            new_row4col, new_col4row, new_u, new_v = lap.solve_lsap_with_removed_row(
-                cost_matrix, i, row4col, col4row, u, v, modify_val=False
+            new_row4col, new_col4row, new_v = lap.solve_lsap_with_removed_row(
+                cost_matrix, i, row4col, col4row, v, modify_val=False
             )
 
             sub_total_cost = cost_matrix[sub_ind, new_col4row[sub_ind]].sum()
@@ -110,10 +110,9 @@ def costs(cost_matrix):
             # These miscalculations are corrected later.
             total_costs[i, :] = cost_matrix[i, :] + sub_total_cost
         else:
-            new_row4col, new_col4row, new_u, new_v = (
+            new_row4col, new_col4row, new_v = (
                 row4col,
                 col4row.copy(),
-                u,
                 v,
             )
 
@@ -126,11 +125,8 @@ def costs(cost_matrix):
         new_col4row[i] = set(col4row).difference(set(new_col4row)).pop()
         total_costs[i, new_col4row[i]] = cost_matrix[row_idxs, new_col4row].sum()
 
-        flag_removed_col = False  # A flag that indicates whether
-        # solve_lsap_with_removed_col has been called.
-        sub_sub_cost_matrix = None
-        sub_new_col4row = None
-        sub_row4col = None
+        # A flag that indicates if solve_lsap_with_removed_col has been called.
+        flag_removed_col = False
 
         for other_i, stolen_j in enumerate(new_col4row):
             if other_i == i:
@@ -190,7 +186,6 @@ def costs(cost_matrix):
                     sub_row4col[sub_row4col > i] -= 1
                     sub_sub_row4col = sub_row4col[potential_cols]
 
-                    sub_new_u = new_u[sub_ind]
                     sub_new_v = new_v[potential_cols]
 
                     flag_removed_col = True
@@ -198,12 +193,11 @@ def costs(cost_matrix):
                     sub_j = list(potential_cols).index(stolen_j)
 
                 try:
-                    _, new_new_col4row, _, _ = lap.solve_lsap_with_removed_col(
+                    _, new_new_col4row, _ = lap.solve_lsap_with_removed_col(
                         sub_sub_cost_matrix,
                         sub_j,
                         sub_sub_row4col,
                         sub_new_col4row,
-                        sub_new_u,  # dual variable associated with rows
                         sub_new_v,  # dual variable associated with cols
                         modify_val=False,
                     )
