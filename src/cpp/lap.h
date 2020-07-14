@@ -223,7 +223,6 @@ void lap(int nr, int nc, const cost *restrict assign_cost,
       augment(freerow, nr, nc, assign_cost, rowsol, colsol, v, verbose);
     }
     catch (char const* e){
-      std::cout << e << std::endl;
       throw;
     }
 

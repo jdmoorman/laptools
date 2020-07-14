@@ -169,6 +169,7 @@ static PyObject *py_lapjv(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   // auto u = reinterpret_cast<double*>(PyArray_DATA(u_array.get()));
   auto v = reinterpret_cast<double*>(PyArray_DATA(v_array.get()));
+  bool feasible = true;
   Py_BEGIN_ALLOW_THREADS
   try {
     lap(nr, nc,
@@ -176,15 +177,19 @@ static PyObject *py_lapjv(PyObject *self, PyObject *args, PyObject *kwargs) {
         row_ind, col_ind, v, verbose);
   }
   catch (char const* e){
-    std::cout << "Caught error " << e << " in py_lapjv" << std::endl;
-    PyErr_SetString(PyExc_ValueError, "cost matrix is infeasible");
-    std::cout << "The issue is not with PyErr" << std::endl;
-    return NULL;
+    feasible = false;
   }
   Py_END_ALLOW_THREADS
-  return Py_BuildValue("(OOO)",
-                       row_ind_array.get(), col_ind_array.get(),
-                       v_array.get());
+
+  if (feasible){
+    return Py_BuildValue("(OOO)",
+                         row_ind_array.get(), col_ind_array.get(),
+                         v_array.get());
+  } else{
+    PyErr_SetString(PyExc_ValueError, "cost matrix is infeasible");
+    return NULL;
+  }
+
 }
 
 
@@ -282,23 +287,26 @@ static PyObject *py_augment(PyObject *self, PyObject *args, PyObject *kwargs) {
   // auto u = PyArray_DATA(u_array.get());
   auto v = PyArray_DATA(v_array.get());
 
+  bool feasible = true;
   Py_BEGIN_ALLOW_THREADS
-  augment(freerow, nr, nc,
-          reinterpret_cast<double*>(cost_matrix),
-          col4row,
-          row4col,
-          reinterpret_cast<double*>(v),
-          verbose);
+  try{
+    augment(freerow, nr, nc,
+            reinterpret_cast<double*>(cost_matrix),
+            col4row,
+            row4col,
+            reinterpret_cast<double*>(v),
+            verbose);
+  } catch (char const* e){
+    feasible = false;
+  }
   Py_END_ALLOW_THREADS
 
-  for (int i = 0; i < nr; i++){
-    std::cout << col4row[i] << std::endl;
+  if (feasible){
+    return Py_BuildValue("(OOO)",
+                         col4row_array.get(), row4col_array.get(), v_array.get());
+  } else{
+    PyErr_SetString(PyExc_ValueError, "cost matrix is infeasible");
+    return NULL;
   }
 
-  for (int i = 0; i < nc; i++){
-    std::cout << row4col[i] << std::endl;
-  }
-
-  return Py_BuildValue("(OOO)",
-                       col4row_array.get(), row4col_array.get(), v_array.get());
 }
