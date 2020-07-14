@@ -87,6 +87,7 @@ class get_pybind_include(object):
 
         return pybind11.get_include()
 
+
 class get_numpy_include(object):
     """Same as ``get_pybind_include``, but for ``numpy``"""
 
