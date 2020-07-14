@@ -38,9 +38,7 @@ def test_solve_lsap_with_removed_row():
             == cost_matrix[row_idx_1, col4row].sum()
         )
 
-        lap.solve_lsap_with_removed_row(
-            cost_matrix, removed_row, row4col, col4row, u, v
-        )
+        lap.solve_lsap_with_removed_row(cost_matrix, removed_row, row4col, col4row, v)
         assert (
             np.array_equal(sub_col_idx_1, col4row[~one_hot(removed_row, num_rows)])
             or sub_cost_matrix[sub_row_idx_1, sub_col_idx_1].sum()
@@ -83,9 +81,7 @@ def test_solve_lsap_with_removed_col():
             == cost_matrix[row_idx_1, col4row].sum()
         )
 
-        lap.solve_lsap_with_removed_col(
-            cost_matrix, removed_col, row4col, col4row, u, v
-        )
+        lap.solve_lsap_with_removed_col(cost_matrix, removed_col, row4col, col4row, v)
         assert (
             np.array_equal(sub_col_idx_1, col4row)
             or sub_cost_matrix_sum == cost_matrix[row_idx_1, col4row].sum()
