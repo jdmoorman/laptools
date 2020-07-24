@@ -37,7 +37,7 @@ void augment(idx freerow, int nr, int nc, const cost *restrict assign_cost,
   for (idx j = 0; j < nc; j++) {
     d[j] = assign_cost[freerow * nc + j] - v[j];
     pred[j] = freerow;
-    collist[j] = j;  // init column list.
+    collist[j] = nc - j - 1;  // init column list.
   }
 
   idx low = 0; // columns in 0..low-1 are ready, now none.
