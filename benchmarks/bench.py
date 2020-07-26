@@ -31,7 +31,7 @@ def time_func(n_inner_loops, solver, shape, type):
     # Note: If no matrix type is indicated, then the matrix is uniformly random
     if type == "uniform":
         cost_matrix = uniform_matrix(shape)
-    if type == "geometric":
+    elif type == "geometric":
         cost_matrix = geometric_matrix(shape)
     elif type == "MW":
         cost_matrix = machol_wien_matrix(shape)
