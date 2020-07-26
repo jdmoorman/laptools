@@ -60,6 +60,7 @@ def plot_suite(suite):
     """Plot the performance of each solver."""
     solver_to_benches = get_solver_to_benches(suite)
     colors = cycle(sns.color_palette())
+    line_styles = cycle(["-", "--", "-.", ":"])
     for solver, benches in solver_to_benches.items():
         sizes, times = get_data_from_benches(benches)
         # Plot the median and the 90% confidence interval
@@ -67,11 +68,12 @@ def plot_suite(suite):
         upper = np.percentile(times, 95, axis=1)
         lower = np.percentile(times, 5, axis=1)
         sizes_str = ["{}x{}".format(n_rows, n_cols) for n_rows, n_cols in sizes]
-        ax = plt.gca()
-        ax.set_yscale("log")
+
         color = next(colors)
-        plt.plot(sizes_str, medians, label=solver, color=color)
-        global recent_color
+        line_style = next(line_styles)
+
+        plt.gca().set_yscale("log")
+        plt.plot(sizes_str, medians, label=solver, color=color, ls=line_style)
         plt.fill_between(sizes_str, lower, upper, color=color, alpha=0.25)
 
 
