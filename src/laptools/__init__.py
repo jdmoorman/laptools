@@ -13,6 +13,6 @@ __copyright__ = "Copyright (c) 2020, Jacob Moorman"
 from _augment import _solve
 from py_lapjv import augment, lapjv
 
-from . import clap, lap
+from . import clap, clap_naive, lap
 
-__all__ = ["clap", "lap", "_solve", "lapjv", "augment"]
+__all__ = ["clap", "clap_naive", "lap", "_solve", "lapjv", "augment"]

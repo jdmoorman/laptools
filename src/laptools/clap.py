@@ -132,9 +132,9 @@ def costs(cost_matrix):
             if other_i == i:
                 continue
 
-            if not np.isfinite(cost_matrix[i, stolen_j]):
-                total_costs[i, stolen_j] = cost_matrix[i, stolen_j]
-                continue
+            # if not np.isfinite(cost_matrix[i, stolen_j]):
+            #     total_costs[i, stolen_j] = cost_matrix[i, stolen_j]
+            #     continue
 
             # Row i steals column stolen_j from other_i because of constraint.
             new_col4row[i] = stolen_j
@@ -152,16 +152,20 @@ def costs(cost_matrix):
             # give us the optimal assignment.
             # TODO: make the following if-else prettier.
 
-            if best_j not in new_col4row and (
-                second_best_j not in new_col4row
-                or cost_matrix[other_i, best_j] != cost_matrix[other_i, second_best_j]
+            if (
+                best_j != stolen_j
+                and best_j not in new_col4row
+                and (
+                    cost_matrix[other_i, best_j] != cost_matrix[other_i, second_best_j]
+                    or second_best_j not in new_col4row
+                )
             ):
                 new_col4row[other_i] = best_j
                 total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
             elif second_best_j not in new_col4row and (
-                third_best_j not in new_col4row
-                or cost_matrix[other_i, second_best_j]
+                cost_matrix[other_i, second_best_j]
                 != cost_matrix[other_i, third_best_j]
+                or third_best_j not in new_col4row
             ):
                 new_col4row[other_i] = second_best_j
                 total_costs[i, stolen_j] = cost_matrix[row_idxs, new_col4row].sum()
