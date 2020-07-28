@@ -1,6 +1,8 @@
 import numpy as np
 
 from _augment import _solve, augment
+from py_lapjv import augment as lapjv_augment
+from py_lapjv import lapjv
 
 
 def solve(cost_matrix, maximize=False):
@@ -50,7 +52,7 @@ def solve(cost_matrix, maximize=False):
     # If the cost_matrix has more rows than columns
     if cost_matrix.shape[1] < cost_matrix.shape[0]:
         # Here, col4row holds the rows in cost_matrix that are in the assignment
-        _, col4row, _, _ = _solve(cost_matrix.T)
+        col4row, _, _ = lapjv(cost_matrix.T)
 
         # Sort the row indexes in the assignment
         idx_sorted = np.argsort(col4row)
@@ -58,12 +60,12 @@ def solve(cost_matrix, maximize=False):
         return (col4row[idx_sorted], a[idx_sorted])
     # If the cost_matrix has more columns than rows
     else:
-        _, col4row, _, _ = _solve(cost_matrix)
+        col4row, _, _ = lapjv(cost_matrix)
         return (a, col4row)
 
 
 def solve_lsap_with_removed_row(
-    cost_matrix, row_removed, row4col, col4row, u, v, modify_val=True
+    cost_matrix, row_removed, row4col, col4row, v, modify_val=True
 ):
     """Solve the sub linear sum assignment problem with one row removed.
 
@@ -92,7 +94,14 @@ def solve_lsap_with_removed_row(
 
     # Copy the variables if they are not modified in place.
     if not modify_val:
-        row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
+        row4col, col4row, v = row4col.copy(), col4row.copy(), v.copy()
+
+    # If the freed up column does not contribute to lowering the costs of any
+    # other rows, simply return the current assignments.
+    freed_col = col4row[row_removed]
+    freed_col_costs = cost_matrix[:, freed_col]
+    if np.all(freed_col_costs >= cost_matrix[np.arange(n_rows), col4row]):
+        return row4col, col4row, v
 
     # Update the cost matrix to reflect the row removal.
     # Create a copy of the cost matrix and update all costs associated with
@@ -101,7 +110,7 @@ def solve_lsap_with_removed_row(
     cost_matrix_copy[row_removed] = 0
 
     # Update the dual variables
-    u[row_removed] = np.min(cost_matrix_copy[row_removed] - v)
+    # u[row_removed] = np.min(cost_matrix_copy[row_removed] - v)
 
     # Perform another augmenting step, only on the sub-cost-matrix that
     # involves the rows and columns in the original optimal assignment.
@@ -117,7 +126,7 @@ def solve_lsap_with_removed_row(
     sub_row4col[row_removed] = -1
 
     # Find the shortest augmenting path for the sub square lsap and augment.
-    augment(sub_cost_matrix, row_removed, sub_row4col, sub_col4row, u, sub_v)
+    lapjv_augment(sub_cost_matrix, row_removed, sub_col4row, sub_row4col, sub_v)
 
     # Update the original assignment
     # Note: update every variable that depends on col4row for indexing first.
@@ -125,11 +134,11 @@ def solve_lsap_with_removed_row(
     v[col4row] = sub_v
     col4row[:] = col4row[sub_col4row]
 
-    return row4col, col4row, u, v
+    return row4col, col4row, v
 
 
 def solve_lsap_with_removed_col(
-    cost_matrix, col_removed, row4col, col4row, u, v, modify_val=True
+    cost_matrix, col_removed, row4col, col4row, v, modify_val=True
 ):
     """Solve the sub linear sum assignment problem with one column removed.
 
@@ -146,8 +155,6 @@ def solve_lsap_with_removed_col(
              Specify the rows to which each column is matched with.
     col4row: 1darray
              Specify the columns to which each row is matched with.
-    u : 1darray
-        The dual cost vector for rows.
     v : 1darray
         The dual cost vector for columns.
     """
@@ -156,11 +163,11 @@ def solve_lsap_with_removed_col(
     # If the removed column is resigned to nothing
     # No need to reassign anything
     if row_freed == -1:
-        return row4col, col4row, u, v
+        return row4col, col4row, v
 
     # Copy the variables if they are not modified in place.
     if not modify_val:
-        row4col, col4row, u, v = row4col.copy(), col4row.copy(), u.copy(), v.copy()
+        row4col, col4row, v = row4col.copy(), col4row.copy(), v.copy()
 
     # Update the cost matrix to reflect the column removal.
     # Create a copy of the cost matrix and update all costs associated with
@@ -174,6 +181,6 @@ def solve_lsap_with_removed_col(
     row4col[col_removed] = -1
 
     # Perform another augmenting step
-    augment(cost_matrix_copy, row_freed, row4col, col4row, u, v)
+    lapjv_augment(cost_matrix_copy, row_freed, col4row, row4col, v)
 
-    return row4col, col4row, u, v
+    return row4col, col4row, v

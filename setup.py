@@ -3,6 +3,7 @@
 
 """The setup script."""
 
+import platform
 import sys
 
 import setuptools
@@ -23,6 +24,7 @@ docs_requirements = [
 ]
 
 setup_requirements = [
+    "numpy",
     "pytest-runner",
     "pybind11>=2.5.0",
 ]
@@ -86,6 +88,15 @@ class get_pybind_include(object):
         return pybind11.get_include()
 
 
+class get_numpy_include(object):
+    """Same as ``get_pybind_include``, but for ``numpy``"""
+
+    def __str__(self):
+        import numpy
+
+        return numpy.get_include()
+
+
 # cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
     """Return a boolean indicating whether a flag name is supported on
@@ -126,8 +137,8 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["/EHsc"],
-        "unix": [],
+        "msvc": ["/EHsc", "/std:c++latest", "/arch:AVX2"],
+        "unix": ["-march=native", "-ftree-vectorize"],
     }
     l_opts = {
         "msvc": [],
@@ -145,8 +156,6 @@ class BuildExt(build_ext):
         link_opts = self.l_opts.get(ct, [])
         if ct == "unix":
             opts.append(cpp_flag(self.compiler))
-            if has_flag(self.compiler, "-fvisibility=hidden"):
-                opts.append("-fvisibility=hidden")
 
         for ext in self.extensions:
             ext.define_macros = [
@@ -182,6 +191,12 @@ setup(
                 ["src/cpp/_augment.cpp"]
             ),  # Sort input source files to ensure bit-for-bit reproducible builds
             include_dirs=[get_pybind_include()],  # Path to pybind11 headers
+            language="c++",
+        ),
+        Extension(
+            "py_lapjv",
+            sources=["src/cpp/py_lapjv.cpp"],
+            include_dirs=[get_numpy_include()],
             language="c++",
         ),
     ],

@@ -1,8 +1,10 @@
 import argparse
+from itertools import cycle
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pyperf
+import seaborn as sns
 
 
 def get_solver_from_bench(bench):
@@ -10,8 +12,19 @@ def get_solver_from_bench(bench):
     Assumes each benchmark's name is of the format:
         "n_rows n_cols solver_name"
     """
-    _, solver = bench.get_name().split("-")
+    _, _, solver = bench.get_name().split("-")
     return solver
+
+
+def get_type_from_bench(bench):
+    """Extract the matrix type from a benchmark.
+
+    Assumes each benchmark's name is of the format:
+
+        "problem_size matrix_type solver_name"
+    """
+    _, type, _ = bench.get_name().split("-")
+    return type
 
 
 def get_size_from_bench(bench):
@@ -19,7 +32,7 @@ def get_size_from_bench(bench):
     Assumes each benchmark's name is of the format:
         "n_rows n_cols solver_name"
     """
-    size, _ = bench.get_name().split("-")
+    size, _, _ = bench.get_name().split("-")
     n_rows, n_cols = size.split("x")
     return (int(n_rows), int(n_cols))
 
@@ -42,15 +55,26 @@ def get_data_from_benches(benches):
     return np.array(sizes), np.array(times)
 
 
-# TODO: can't do a loglog plot
+# TODO: also get the 75% confidence interval
 def plot_suite(suite):
     """Plot the performance of each solver."""
     solver_to_benches = get_solver_to_benches(suite)
+    colors = cycle(sns.color_palette())
+    line_styles = cycle(["-", "--", "-.", ":"])
     for solver, benches in solver_to_benches.items():
         sizes, times = get_data_from_benches(benches)
+        # Plot the median and the 90% confidence interval
         medians = np.median(times, axis=1)
+        upper = np.percentile(times, 95, axis=1)
+        lower = np.percentile(times, 5, axis=1)
         sizes_str = ["{}x{}".format(n_rows, n_cols) for n_rows, n_cols in sizes]
-        plt.plot(sizes_str, medians, label=solver)
+
+        color = next(colors)
+        line_style = next(line_styles)
+
+        plt.gca().set_yscale("log")
+        plt.plot(sizes_str, medians, label=solver, color=color, ls=line_style)
+        plt.fill_between(sizes_str, lower, upper, color=color, alpha=0.25)
 
 
 def parse_args():
@@ -66,7 +90,7 @@ def main():
     plot_suite(suite)
     plt.legend()
     plt.xlabel("Problem size")
-    plt.ylabel("Time to solve")
+    plt.ylabel("Time to solve (s)")
     plt.savefig(args.outputfile)
 
 

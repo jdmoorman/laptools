@@ -8,6 +8,11 @@ def uniform_matrix(shape, low=0.0, high=1.0):
     return np.random.uniform(low=low, high=high, size=shape)
 
 
+def randint_matrix(shape, low=0, high=100):
+    """Generate a matrix of random integers of the given shape."""
+    return np.random.randint(low=low, high=high, size=shape)
+
+
 def geometric_matrix(shape, low=0.0, high=1.0):
     """Generate a geometric matrix of the given shape."""
     n_rows, n_cols = shape

@@ -47,9 +47,9 @@ def test_linear_sum_assignment():
              []),
 
             # Square with positive infinities
-            ([[10, float("inf"), float("inf")],
-              [float("inf"), float("inf"), 1],
-              [float("inf"), 7, float("inf")]],
+            ([[    10, np.inf, np.inf],
+              [np.inf, np.inf,      1],
+              [np.inf,      7, np.inf]],
              [10, 1, 7]),
         ]:
 
