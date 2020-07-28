@@ -127,8 +127,8 @@ def costs(cost_matrix):
         total_costs[i, new_col4row[i]] = cost_matrix[row_idxs, new_col4row].sum()
 
         # A flag that indicates if solve_lsap_with_removed_col has been called.
-        flag_removed_col = False  
-        
+        flag_removed_col = False
+
         for other_i, stolen_j in enumerate(new_col4row):
             if other_i == i:
                 continue
