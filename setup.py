@@ -196,7 +196,7 @@ setup(
         Extension(
             "py_lapjv",
             sources=["src/cpp/py_lapjv.cpp"],
-            include_dirs=[get_numpy_include()],
+            include_dirs=[get_numpy_include(), "src/cpp"],
             language="c++",
         ),
     ],
