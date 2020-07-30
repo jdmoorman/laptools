@@ -5,7 +5,7 @@
 
 import platform
 import sys
-
+import os
 import setuptools
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -196,7 +196,7 @@ setup(
         Extension(
             "py_lapjv",
             sources=["src/cpp/py_lapjv.cpp"],
-            include_dirs=[get_numpy_include(), "src/cpp"],
+            include_dirs=[get_numpy_include(), os.path.join(os.getcwd(), "src", "cpp")],
             language="c++",
         ),
     ],
