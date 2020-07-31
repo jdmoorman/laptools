@@ -12,8 +12,8 @@ from utils import (
 
 
 def get_solvers():
-    from laptools.clap_naive import costs as costs_naive
     from laptools.clap import costs
+    from laptools.clap_naive import costs as costs_naive
 
     return {"naive": costs_naive, "dynamic": costs}
 

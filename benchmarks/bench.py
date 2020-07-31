@@ -16,6 +16,7 @@ def get_solvers():
     # from lapjv_noinit import lapjv as lapjv_noinit_lap
     from lapsolver import solve_dense
     from scipy.optimize import linear_sum_assignment as scipy_lap
+
     from laptools.lap import solve as laptools_lap
 
     return {

@@ -8,8 +8,9 @@ include *.png
 # Tests
 include tox.ini
 recursive-include tests *.py
-recursive-include benchmarks *.pdf
+recursive-exclude benchmarks *.pdf
 recursive-include benchmarks *.py
 recursive-exclude * *.py[co]
+recursive-include src *.h
 
 graft src/laptools/data
