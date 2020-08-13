@@ -56,11 +56,14 @@ def costs(cost_matrix):
 
     # Find the two minimum-cost columns for each row
     best_col_idxs = np.argmin(cost_matrix, axis=1)
-    _cost_matrix = cost_matrix.copy()
-    _cost_matrix[row_idxs, best_col_idxs] = np.inf
-    second_best_col_idxs = np.argmin(_cost_matrix, axis=1)
-    _cost_matrix[row_idxs, second_best_col_idxs] = np.inf
-    third_best_col_idxs = np.argmin(_cost_matrix, axis=1)
+    best_col_vals = cost_matrix[row_idxs, best_col_idxs]
+    cost_matrix[row_idxs, best_col_idxs] = np.inf
+    second_best_col_idxs = np.argmin(cost_matrix, axis=1)
+    second_best_col_vals = cost_matrix[row_idxs, second_best_col_idxs]
+    cost_matrix[row_idxs, second_best_col_idxs] = np.inf
+    third_best_col_idxs = np.argmin(cost_matrix, axis=1)
+    cost_matrix[row_idxs, best_col_idxs] = best_col_vals
+    cost_matrix[row_idxs, second_best_col_idxs] = second_best_col_vals
 
     # When a row has its column stolen by a constraint, these are the columns
     # that might come into play when we are forced to resolve the assignment.
@@ -69,10 +72,11 @@ def costs(cost_matrix):
         # unused = np.setdiff1d(np.arange(n_cols), col4row, assume_unique=True)
         # first_unused = np.argmin(cost_matrix[:, unused], axis=1)
         # potential_cols = np.union1d(col4row, unused[first_unused])
-        _unused_cost_matrix = cost_matrix.copy()
-        _unused_cost_matrix[:, col4row] = np.inf
-        first_unused = np.argmin(_unused_cost_matrix, axis=1)
+        used_cost_matrix = cost_matrix[:, col4row]
+        cost_matrix[:, col4row] = np.inf
+        first_unused = np.argmin(cost_matrix, axis=1)
         potential_cols = np.union1d(col4row, first_unused)
+        cost_matrix[:, col4row] = used_cost_matrix
     else:
         potential_cols = np.arange(n_cols)
 
